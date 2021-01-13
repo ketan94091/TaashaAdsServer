@@ -7,7 +7,7 @@ import android.widget.ImageView;
 
 import com.example.taashaadslib.R;
 
-public class LoadImageActivity extends AppCompatActivity {
+public  class LoadImageActivity extends AppCompatActivity {
 
     public static ImageView imgLocalImage;
 
