@@ -20,12 +20,12 @@ public  class LoadImageActivity  {
 
     public static void loadAdsView(ImageView imgView , Activity mActivity){
 
-        //imgView.setImageResource(R.drawable.test);
+        imgView.setImageResource(R.drawable.whatapp);
 
         /*Uri uri =  Uri.parse( "https://i.imgur.com/PZ4rb.jpg" );
         imgView.setImageURI(uri);*/
 
-        Glide.with(mActivity).load("https://i.imgur.com/PZ4rb.jpg").into(imgView);
+        //Glide.with(mActivity).load("https://i.imgur.com/PZ4rb.jpg").into(imgView);
 
 
     }
