@@ -2,21 +2,22 @@ package com.example.taashaadslib.AdSerever;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.widget.ImageView;
 
 import com.example.taashaadslib.R;
 
-public  class LoadImageActivity extends AppCompatActivity {
+public  class LoadImageActivity  {
 
-    public static ImageView imgLocalImage;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_load_image);
+    public static void loadAdsView(ImageView imgView){
 
-        imgLocalImage = (ImageView)findViewById(R.id.imgLocalImage);
+        imgView.setImageResource(R.drawable.test);
+
     }
+
+
 
 }
