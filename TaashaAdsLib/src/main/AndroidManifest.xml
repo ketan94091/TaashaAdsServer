@@ -3,10 +3,11 @@
     package="com.example.taashaadslib">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application>
-        <activity android:name=".AdSerever.LoadImageActivity"></activity>
+        <activity android:name=".AdSerever.SampleActivity"></activity>
+        <activity android:name=".AdSerever.LoadImageActivity" />
     </application>
 
 </manifest>
