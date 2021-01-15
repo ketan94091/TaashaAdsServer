@@ -64,7 +64,7 @@ public class LoadImageActivity {
 
                 loadAdsView(imgView);
             }
-        }, 1000);
+        }, 5000);
 
 
 
