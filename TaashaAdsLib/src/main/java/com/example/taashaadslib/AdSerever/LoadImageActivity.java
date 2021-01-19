@@ -37,25 +37,30 @@ public class LoadImageActivity {
 
     }
 
-    public static void loadAdsView(ImageView imgViewm,  Activity mActivity) {
+    public static void loadAdsView(ImageView imgView,  Activity mActivity) {
 
 
-        /*switch (count) {
+        switch (count) {
 
             case 1:
-                imgView.setImageResource(R.drawable.facebook);
+               // imgView.setImageResource(R.drawable.facebook);
+                Glide.with(mActivity).load("https://homepages.cae.wisc.edu/~ece533/images/airplane.png").into(imgView);
                 break;
             case 2:
-                imgView.setImageResource(R.drawable.whatapp);
+               // imgView.setImageResource(R.drawable.whatapp);
+                Glide.with(mActivity).load("https://homepages.cae.wisc.edu/~ece533/images/baboon.png").into(imgView);
                 break;
             case 3:
-                imgView.setImageResource(R.drawable.instagram);
+                //imgView.setImageResource(R.drawable.instagram);
+                Glide.with(mActivity).load("https://homepages.cae.wisc.edu/~ece533/images/frymire.png").into(imgView);
                 break;
             case 4:
-                imgView.setImageResource(R.drawable.appdate);
+               // imgView.setImageResource(R.drawable.appdate);
+                Glide.with(mActivity).load("https://homepages.cae.wisc.edu/~ece533/images/tulips.png").into(imgView);
                 break;
             case 5:
-                imgView.setImageResource(R.drawable.snapchat);
+                //imgView.setImageResource(R.drawable.snapchat);
+                Glide.with(mActivity).load("https://i.imgur.com/PZ4rb.jpg").into(imgView);
                 break;
         }
 
@@ -71,16 +76,16 @@ public class LoadImageActivity {
                     count=1;
                 }
 
-                loadAdsView(imgView);
+                loadAdsView(imgView,mActivity);
             }
-        }, 5000);*/
+        }, 5000);
 
 
 
         /*Uri uri =  Uri.parse( "https://i.imgur.com/PZ4rb.jpg" );
         imgView.setImageURI(uri);*/
 
-       Glide.with(mActivity).load("https://i.imgur.com/PZ4rb.jpg").into(imgViewm);
+
 
 
     }
