@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
@@ -24,6 +25,13 @@ public class LoadImageActivity {
     public static int count = 1;
 
     public void starttimer() {
+
+       /* if ((position + 1) % showPromotion == 0) {
+
+            holder.adView.loadAd(adRequest);
+        }else {
+            holder.adView.setVisibility(View.GONE);
+        }*/
 
 
     }

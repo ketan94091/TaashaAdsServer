@@ -5,8 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".AdSerever.SampleActivity">
+<!--<androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/recycleSmsList"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"/>-->
 
-    <com.example.taashaadslib.customviews.TaashaAdsView
+    <ListView
+        android:id="@+id/listSms"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
