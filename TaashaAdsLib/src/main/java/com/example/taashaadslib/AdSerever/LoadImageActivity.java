@@ -3,6 +3,7 @@ package com.example.taashaadslib.AdSerever;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -36,10 +37,10 @@ public class LoadImageActivity {
 
     }
 
-    public static void loadAdsView(ImageView imgView) {
+    public static void loadAdsView(ImageView imgViewm,  Activity mActivity) {
 
 
-        switch (count) {
+        /*switch (count) {
 
             case 1:
                 imgView.setImageResource(R.drawable.facebook);
@@ -72,14 +73,14 @@ public class LoadImageActivity {
 
                 loadAdsView(imgView);
             }
-        }, 5000);
+        }, 5000);*/
 
 
 
         /*Uri uri =  Uri.parse( "https://i.imgur.com/PZ4rb.jpg" );
         imgView.setImageURI(uri);*/
 
-        //Glide.with(mActivity).load("https://i.imgur.com/PZ4rb.jpg").into(imgView);
+       Glide.with(mActivity).load("https://i.imgur.com/PZ4rb.jpg").into(imgViewm);
 
 
     }
