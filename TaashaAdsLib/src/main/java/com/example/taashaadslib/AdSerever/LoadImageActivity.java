@@ -78,7 +78,7 @@ public class LoadImageActivity {
 
                 loadAdsView(imgView,mActivity);
             }
-        }, 5000);
+        }, 10000);
 
 
 
