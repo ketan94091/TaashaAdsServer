@@ -44,23 +44,23 @@ public class LoadImageActivity {
 
             case 1:
                // imgView.setImageResource(R.drawable.facebook);
-                Glide.with(mActivity).load("https://homepages.cae.wisc.edu/~ece533/images/airplane.png").into(imgView);
+                Glide.with(mActivity).load("https://doqmcvk62zfkt.cloudfront.net/easyPay/cc9d8c702e72425cb0d03ebf818e36c7-69266.png").into(imgView);
                 break;
             case 2:
                // imgView.setImageResource(R.drawable.whatapp);
-                Glide.with(mActivity).load("https://homepages.cae.wisc.edu/~ece533/images/baboon.png").into(imgView);
+                Glide.with(mActivity).load("https://doqmcvk62zfkt.cloudfront.net/easyPay/cc9d8c702e72425cb0d03ebf818e36c7-69266.png").into(imgView);
                 break;
             case 3:
                 //imgView.setImageResource(R.drawable.instagram);
-                Glide.with(mActivity).load("https://homepages.cae.wisc.edu/~ece533/images/frymire.png").into(imgView);
+                Glide.with(mActivity).load("https://doqmcvk62zfkt.cloudfront.net/easyPay/cc9d8c702e72425cb0d03ebf818e36c7-69266.png").into(imgView);
                 break;
             case 4:
                // imgView.setImageResource(R.drawable.appdate);
-                Glide.with(mActivity).load("https://homepages.cae.wisc.edu/~ece533/images/tulips.png").into(imgView);
+                Glide.with(mActivity).load("https://doqmcvk62zfkt.cloudfront.net/easyPay/cc9d8c702e72425cb0d03ebf818e36c7-69266.png").into(imgView);
                 break;
             case 5:
                 //imgView.setImageResource(R.drawable.snapchat);
-                Glide.with(mActivity).load("https://i.imgur.com/PZ4rb.jpg").into(imgView);
+                Glide.with(mActivity).load("https://doqmcvk62zfkt.cloudfront.net/easyPay/cc9d8c702e72425cb0d03ebf818e36c7-69266.png").into(imgView);
                 break;
         }
 

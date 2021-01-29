@@ -9,7 +9,8 @@
 
 
 
-    <application>
+    <application
+        android:usesCleartextTraffic="true">
         <activity android:name=".AdSerever.SampleActivity"/>
         <activity android:name=".AdSerever.LoadImageActivity"/>
     </application>
