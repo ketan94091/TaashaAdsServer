@@ -6,14 +6,14 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.example.taashaadslib.AdSerever.GetAdsActivity;
 import com.example.taashaadslib.AdSerever.SampleActivity;
 import com.example.taashaadslib.AdSerever.SimpleLogging;
 import com.example.taashaadslib.Interfaces.LoadAds;
 
 public class MainActivity extends AppCompatActivity{
 
-
-   private LoadAds mLoadAds;
+     LoadAds mLoadAds = new GetAdsActivity();
 
 
     @Override
@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity{
         //SimpleLogging. callAdsApi();
 
 
-        mLoadAds.initAds(this, "test");
+        mLoadAds.initAds(MainActivity.this, "test");
 
     }
 
