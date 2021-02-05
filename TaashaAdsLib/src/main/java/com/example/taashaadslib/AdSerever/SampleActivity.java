@@ -60,7 +60,6 @@ public class SampleActivity extends AppCompatActivity {
 
 
 
-
         cursor.moveToFirst();
         while  (cursor.moveToNext())
         {
