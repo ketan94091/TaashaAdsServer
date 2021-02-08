@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 
-import com.example.taashaadslib.AdSerever.GetAdsClass;
+import com.example.taashaadslib.Interfaces.GetAdsClass;
 import com.example.taashaadslib.AdSerever.LoadAdsClass;
 
 

@@ -1,4 +1,4 @@
-package com.example.taashaadslib.AdSerever;
+package com.example.taashaadslib.Interfaces;
 
 
 import android.app.Activity;
