@@ -2,26 +2,22 @@ package com.example.taashaadsserver;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 
-import com.example.taashaadslib.AdSerever.GetAdsActivity;
-import com.example.taashaadslib.AdSerever.SampleActivity;
-import com.example.taashaadslib.AdSerever.SimpleLogging;
-import com.example.taashaadslib.Interfaces.LoadAds;
+import com.example.taashaadslib.AdSerever.GetAdsClass;
+import com.example.taashaadslib.AdSerever.LoadAdsClass;
+
 
 public class MainActivity extends AppCompatActivity{
 
-     LoadAds mLoadAds = new GetAdsActivity();
-
+    GetAdsClass mGetAdsClass = new LoadAdsClass();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
+        mGetAdsClass.getAds(MainActivity.this,"Test");
 
 
         /*SampleActivity sampleActivity = new SampleActivity();
@@ -34,8 +30,6 @@ public class MainActivity extends AppCompatActivity{
 
         //SimpleLogging. callAdsApi();
 
-
-        mLoadAds.initAds(MainActivity.this, "test");
 
     }
 

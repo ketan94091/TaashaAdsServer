@@ -1,12 +1,13 @@
 package com.example.taashaadslib.AdSerever;
 
-import android.content.Intent;
+import android.app.Activity;
+import android.database.Cursor;
+import android.net.Uri;
 import android.util.Log;
-
-import androidx.appcompat.widget.DialogTitle;
 
 import com.example.taashaadslib.AppUtils.GlobalFiles;
 import com.example.taashaadslib.ModelClasses.LoginAuthModel;
+import com.example.taashaadslib.ModelClasses.SMSData;
 import com.example.taashaadslib.ModelClasses.TaashaAdsModel;
 import com.example.taashaadslib.RetrofitClass.UpdateAllAPI;
 import com.google.gson.Gson;
@@ -15,6 +16,7 @@ import com.google.gson.JsonObject;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
@@ -25,9 +27,10 @@ import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-  public abstract class SimpleLogging {
+  public  class SimpleLogging {
 
     private static final String TAG = "SimpleLogging";
+
 
     public static void logPrintErrorLog(String strPrintErrorLog){
 
@@ -35,7 +38,45 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
         //callTestApi();
         callAdsApi();
+
+        /*if(fetchInbox()!=null)
+        {
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fetchInbox());
+            listSms.setAdapter(adapter);
+        }*/
     }
+
+      public static ArrayList<SMSData.DataBean> fetchInbox(Activity mActivity)
+      {
+          ArrayList<SMSData.DataBean> smsData = new ArrayList<>();
+
+          Uri uriSms = Uri.parse("content://sms/inbox");
+          Cursor cursor = mActivity.getContentResolver().query(uriSms, new String[]{"_id", "address", "date", "body"},null,null,null);
+
+
+
+          cursor.moveToFirst();
+          while  (cursor.moveToNext())
+          {
+              String address = cursor.getString(1);
+              String body = cursor.getString(3);
+              String date = cursor.getString(2);
+
+              //  smsData.add("Address==> "+address+"\n\nSMS==> "+body);
+
+              SMSData.DataBean mDatabean = new SMSData.DataBean();
+              mDatabean.setDate(date);
+              mDatabean.setSender(address);
+              mDatabean.setSmsContent(body);
+
+              smsData.add(mDatabean);
+
+          }
+
+
+          return smsData;
+
+      }
 
 
     public static void callTestApi() {
