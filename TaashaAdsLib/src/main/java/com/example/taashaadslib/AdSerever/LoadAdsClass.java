@@ -2,9 +2,12 @@ package com.example.taashaadslib.AdSerever;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.util.Log;
 
+import com.example.taashaadslib.AlertUtils.AlertClasses;
 import com.example.taashaadslib.AppUtils.GlobalFiles;
+import com.example.taashaadslib.CommonClasses.SessionManager;
 import com.example.taashaadslib.Interfaces.GetAdsClass;
 import com.example.taashaadslib.ModelClasses.TaashaAdsModel;
 import com.example.taashaadslib.RetrofitClass.UpdateAllAPI;
@@ -24,13 +27,25 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class LoadAdsClass implements GetAdsClass {
+
+    private static final String TAG = "LoadAdsClass";
+
+    private int height;
+    private int width;
+
+
     @Override
-    public void getAds(Activity mActivity, String msg) {
+    public void getAds(Context mContext) {
 
-        callAdsApi();
-    }
 
-    private void callAdsApi() {
+
+
+        SessionManager mSessionManager = new SessionManager(mContext);
+        mSessionManager.openSettings();
+
+        AlertClasses.printLogE(TAG , "STATE : "+mSessionManager.getPreference(GlobalFiles.STATE));
+        AlertClasses.printLogE(TAG , "CITY : "+mSessionManager.getPreference(GlobalFiles.CITY));
+
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -46,7 +61,7 @@ public class LoadAdsClass implements GetAdsClass {
 
                 okhttp3.Request request = requestOriginal.newBuilder()
                         //.header("Content-Type", "application/json; charset=utf-8")
-                        .header("X-Auth-Token", "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJlYXN5cGF5IiwiY3JlYXRlZCI6MTQ5Nzg2NzIwNDU3MSwiZXhwIjo2MTk3Nzg2NzIwNH0.bQS77TdFV4gH05y2L6b7f6hxQ6cJxs3R7Jmg6W7NefFhiCiv_YBqFjSUlts32ukxRFLYvylEWDGMcYrz2lR_pA")
+                        .header("X-Auth-Token", mSessionManager.getPreference(GlobalFiles.KEY))
                         .method(requestOriginal.method(), requestOriginal.body())
                         .build();
 

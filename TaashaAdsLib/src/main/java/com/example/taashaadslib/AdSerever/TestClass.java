@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.example.taashaadslib.AppUtils.GlobalFiles;
-import com.example.taashaadslib.ModelClasses.LoginAuthModel;
 import com.example.taashaadslib.ModelClasses.SMSData;
 import com.example.taashaadslib.ModelClasses.TaashaAdsModel;
 import com.example.taashaadslib.RetrofitClass.UpdateAllAPI;
@@ -27,7 +26,7 @@ import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-  public  class SimpleLogging {
+  public  class TestClass {
 
     private static final String TAG = "SimpleLogging";
 
@@ -36,7 +35,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 
 
-        //callTestApi();
         callAdsApi();
 
         /*if(fetchInbox()!=null)
@@ -77,85 +75,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
           return smsData;
 
       }
-
-
-    public static void callTestApi() {
-
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.addInterceptor(new Interceptor() {
-            @Override
-            public okhttp3.Response intercept(Chain chain) throws IOException {
-                okhttp3.Request original = chain.request();
-
-                okhttp3.Request request = original.newBuilder()
-                        .header("Content-Type", "application/json; charset=utf-8")
-                        // .header("Authorization", sessionManager.getToken(mContext))
-                        .method(original.method(), original.body())
-                        .build();
-
-                return chain.proceed(request);
-            }
-        });
-
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-
-        final OkHttpClient client = httpClient.build();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(GlobalFiles.COMMON_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                //.client(client)
-                .client(client.newBuilder().connectTimeout(30000, TimeUnit.SECONDS).readTimeout(30000, TimeUnit.SECONDS).writeTimeout(30000, TimeUnit.SECONDS).build())
-                .build();
-
-        UpdateAllAPI patchService1 = retrofit.create(UpdateAllAPI.class);
-        JsonObject paramObject = new JsonObject();
-        paramObject.addProperty("username", "EBB12BE87E78AB26BC5C176BD22830AB");
-        paramObject.addProperty("password","D0DA388BFBB3D9C7E8A3ACD030768BD4");
-        paramObject.addProperty("deviceId", "ccc6f4218a3e9357");
-
-        Call<LoginAuthModel> call = patchService1.loginAuth(paramObject);
-
-
-        call.enqueue(new Callback<LoginAuthModel>() {
-            @Override
-            public void onResponse(Call<LoginAuthModel> call, retrofit2.Response<LoginAuthModel> response) {
-
-
-
-                if (response.isSuccessful()) {
-
-                    Gson gson = new GsonBuilder()
-                            .excludeFieldsWithModifiers(Modifier.FINAL, Modifier.TRANSIENT, Modifier.STATIC)
-                            .serializeNulls()
-                            .create();
-
-                    int intCode = response.body().getCode();
-
-                    Log.e("Login response", "Response @ Login: " + gson.toJson(response.body()));
-
-                    switch (intCode) {
-                        case 1:
-
-                            break;
-
-                        case 2:
-
-
-                            break;
-                    }
-
-                }
-            }
-
-            @Override
-            public void onFailure(Call<LoginAuthModel> call, Throwable t) {
-
-
-            }
-        });
-    }
 
       public static void callAdsApi() {
 
