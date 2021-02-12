@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AdSerever.LoadImageActivity">
+    tools:context=".ExtraClasses.LoadImageActivity">
 
     <ImageView
         android:id="@+id/imgLocalImage"

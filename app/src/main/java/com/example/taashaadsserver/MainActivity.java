@@ -3,6 +3,7 @@ package com.example.taashaadsserver;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.widget.ImageView;
 
 import com.example.taashaadslib.AdSerever.TaashaAdServer;
 import com.example.taashaadslib.Interfaces.GetAdsClass;
@@ -13,11 +14,14 @@ import com.example.taashaadslib.Interfaces.InitTaashaAdServer;
 public class MainActivity extends AppCompatActivity{
 
 
+    private ImageView imgLocalImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        imgLocalImage =(ImageView)findViewById(R.id.imgLocalImage);
 
         //INITIALIZATION OF SDK
        InitTaashaAdServer mInitTaashaAdServer = new TaashaAdServer();
@@ -26,17 +30,7 @@ public class MainActivity extends AppCompatActivity{
         //CREATE INSTANCE
         //LOAD ADS
         GetAdsClass mGetAdsClass = new LoadAdsClass();
-        mGetAdsClass.getAds(getApplicationContext());
-
-        /*SampleActivity sampleActivity = new SampleActivity();
-        sampleActivity.fetchInbox(this);
-
-        *//*for (int i = 0 ; i< sampleActivity.fetchInbox(this).size() ; i++){
-
-            Log.e("MAIN_APP",""+sampleActivity.fetchInbox(this).get(i).getSmsContent());
-        }*/
-
-        //SimpleLogging. callAdsApi();
+        mGetAdsClass.getAds(this,getApplicationContext(),imgLocalImage);
 
 
     }

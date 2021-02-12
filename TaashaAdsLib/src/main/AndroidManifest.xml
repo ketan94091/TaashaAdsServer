@@ -11,7 +11,7 @@
 
     <application
         android:usesCleartextTraffic="true">
-        <activity android:name=".AdSerever.LoadImageActivity"/>
+        <activity android:name=".ExtraClasses.LoadImageActivity"/>
     </application>
 
 </manifest>

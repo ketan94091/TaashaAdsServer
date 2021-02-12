@@ -12,6 +12,7 @@ public class GlobalFiles {
     public static final String KEY = "key";
     public static final String APPLICATION_VERSION = "appversion";
     public static final String APPLICATION_OS = "os";
+    public static final String INT_TYPE = "inttype";
     public static final String APPLICATION_OS_VERSION = "osv";
     public static final String DEVICE_TYPE = "type";
     public static final String DEVICE_NETWORK_TYPE = "network";
@@ -33,6 +34,12 @@ public class GlobalFiles {
     public static final String HOUSEHOLD = "household";
     public static final String AGEGROUP = "agegroup";
     public static final String INCOM_SOURCE = "incomesource";
+    public static final String BASE_R0TATION = "baserotation";
+    public static final String CURRENT_R0TATION = "currentrotation";
+    public static final String CREATIVE_ID = "creativeid";
+    public static final String USER_UNIQUE_ID = "useruniqueid";
+    public static final String MEDIATOR_NAME = "mediatorname";
+    public static final String IS_IN_ROTATION = "isinrotation";
 
 
 }

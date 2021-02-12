@@ -42,6 +42,12 @@ public class TaashaAdServer implements InitTaashaAdServer {
     private int agegroup;//DONE
     private int household;//DONE
     private int incomesource;//DONE
+    private int baserotation;//DONE
+    private int currentrotation;//DONE
+    private int creativeid;//DONE
+    private int useruniqueid;//DONE
+    private int mediatorname;//DONE
+    private int isinrotation;//DONE
 
 
     @Override
@@ -81,6 +87,18 @@ public class TaashaAdServer implements InitTaashaAdServer {
         //SAVE INCOME SOURCE
         mSessionManager.updatePreferenceString(GlobalFiles.INCOM_SOURCE , "2");
 
+        //SAVE BASE ROTATION
+        mSessionManager.updatePreferenceString(GlobalFiles.BASE_R0TATION , "3");
+
+        //SAVE CURRENT ROTATION
+        mSessionManager.updatePreferenceString(GlobalFiles.CURRENT_R0TATION , "9");
+
+        //SAVE CREATIVE ID
+        mSessionManager.updatePreferenceString(GlobalFiles.CREATIVE_ID , "0");
+
+        //SAVE USER UNIQUE ID
+        mSessionManager.updatePreferenceString(GlobalFiles.USER_UNIQUE_ID , "3e96eb71-3778-46fd-bcd8-fccd820125cd");
+
         //SAVE KIOSK ID
         mSessionManager.updatePreferenceString(GlobalFiles.KIOSK_ID , "abs1234");
 
@@ -91,6 +109,12 @@ public class TaashaAdServer implements InitTaashaAdServer {
         //TYPE 2= STATE
         mSessionManager.updatePreferenceString(GlobalFiles.STATE , ""+getCityName(mContext,latitude , longitude,2));
 
+        //SAVE MEDIATOR NAME
+        mSessionManager.updatePreferenceString(GlobalFiles.MEDIATOR_NAME ,  "0");
+
+        //SAVE IS IN ROTATION
+        mSessionManager.updatePreferenceString(GlobalFiles.IS_IN_ROTATION ,  "false");
+
         //SAVE BUNDLE ID
         mSessionManager.updatePreferenceString(GlobalFiles.BUNDLE_ID , "com.aerserv.www");
 
@@ -100,11 +124,11 @@ public class TaashaAdServer implements InitTaashaAdServer {
         //SAVE NETWORK TYPE
         mSessionManager.updatePreferenceString(GlobalFiles.DEVICE_NETWORK_TYPE , chkNetwrokType(mContext));
 
-        //SAVE DNT
-        mSessionManager.updatePreferenceString(GlobalFiles.DNT , "0");
+        //SAVE INT TYPE
+        mSessionManager.updatePreferenceString(GlobalFiles.DNT , "false");
 
         //SAVE INT TYPE
-        mSessionManager.updatePreferenceString(GlobalFiles.DNT , "0");
+        mSessionManager.updatePreferenceString(GlobalFiles.INT_TYPE , "1");
 
         //SAVE URL
         mSessionManager.updatePreferenceString(GlobalFiles.URL , "http://www.aerserv.com");

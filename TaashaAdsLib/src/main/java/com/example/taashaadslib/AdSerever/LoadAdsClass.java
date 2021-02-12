@@ -1,10 +1,21 @@
 package com.example.taashaadslib.AdSerever;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import com.bumptech.glide.Glide;
 import com.example.taashaadslib.AlertUtils.AlertClasses;
 import com.example.taashaadslib.AppUtils.GlobalFiles;
 import com.example.taashaadslib.CommonClasses.SessionManager;
@@ -26,25 +37,55 @@ import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class LoadAdsClass implements GetAdsClass {
+public class LoadAdsClass extends AppCompatActivity implements GetAdsClass {
 
     private static final String TAG = "LoadAdsClass";
+    private  Context mContext;
+    private  Activity mActivity;
 
     private int height;
     private int width;
 
 
     @Override
-    public void getAds(Context mContext) {
-
-
-
+    public void getAds(Activity mActivity , Context mContext, ImageView mImageView) {
+        this.mContext=mContext;
+        this.mActivity=mActivity;
 
         SessionManager mSessionManager = new SessionManager(mContext);
         mSessionManager.openSettings();
 
-        AlertClasses.printLogE(TAG , "STATE : "+mSessionManager.getPreference(GlobalFiles.STATE));
+        AlertClasses.printLogE(TAG , "LATITUDE : "+mSessionManager.getPreference(GlobalFiles.LATITUDE));
+        AlertClasses.printLogE(TAG , "LONGITUDE : "+mSessionManager.getPreference(GlobalFiles.LONGITUDE));
+        AlertClasses.printLogE(TAG , "HEIGHT : "+mSessionManager.getPreference(GlobalFiles.HEIGHT));
+        AlertClasses.printLogE(TAG , "WIDTH : "+mSessionManager.getPreference(GlobalFiles.WIDTH));
+        AlertClasses.printLogE(TAG , "GENDER : "+mSessionManager.getPreference(GlobalFiles.GENDER));
+        AlertClasses.printLogE(TAG , "AGEGROUP : "+mSessionManager.getPreference(GlobalFiles.AGEGROUP));
+        AlertClasses.printLogE(TAG , "HOUSEHOLD : "+mSessionManager.getPreference(GlobalFiles.HOUSEHOLD));
+        AlertClasses.printLogE(TAG , "INCOM_SOURCE : "+mSessionManager.getPreference(GlobalFiles.INCOM_SOURCE));
+        AlertClasses.printLogE(TAG , "BASE_R0TATION : "+mSessionManager.getPreference(GlobalFiles.BASE_R0TATION));
+        AlertClasses.printLogE(TAG , "CURRENT_R0TATION : "+mSessionManager.getPreference(GlobalFiles.CURRENT_R0TATION));
+        AlertClasses.printLogE(TAG , "CREATIVE_ID : "+mSessionManager.getPreference(GlobalFiles.CREATIVE_ID));
+        AlertClasses.printLogE(TAG , "USER_UNIQUE_ID : "+mSessionManager.getPreference(GlobalFiles.USER_UNIQUE_ID));
+        AlertClasses.printLogE(TAG , "KIOSK_ID : "+mSessionManager.getPreference(GlobalFiles.KIOSK_ID));
         AlertClasses.printLogE(TAG , "CITY : "+mSessionManager.getPreference(GlobalFiles.CITY));
+        AlertClasses.printLogE(TAG , "STATE : "+mSessionManager.getPreference(GlobalFiles.STATE));
+        AlertClasses.printLogE(TAG , "MEDIATOR_NAME : "+mSessionManager.getPreference(GlobalFiles.MEDIATOR_NAME));
+        AlertClasses.printLogE(TAG , "IS_IN_ROTATION : "+mSessionManager.getPreference(GlobalFiles.IS_IN_ROTATION));
+        AlertClasses.printLogE(TAG , "BUNDLE_ID : "+mSessionManager.getPreference(GlobalFiles.BUNDLE_ID));
+        AlertClasses.printLogE(TAG , "APPLICATION_VERSION : "+mSessionManager.getPreference(GlobalFiles.APPLICATION_VERSION));
+        AlertClasses.printLogE(TAG , "DEVICE_NETWORK_TYPE : "+mSessionManager.getPreference(GlobalFiles.DEVICE_NETWORK_TYPE));
+        AlertClasses.printLogE(TAG , "DNT : "+mSessionManager.getPreference(GlobalFiles.DNT));
+        AlertClasses.printLogE(TAG , "INT_TYPE : "+mSessionManager.getPreference(GlobalFiles.INT_TYPE));
+        AlertClasses.printLogE(TAG , "URL : "+mSessionManager.getPreference(GlobalFiles.URL));
+        AlertClasses.printLogE(TAG , "DEVICE_MANUFACTURER : "+mSessionManager.getPreference(GlobalFiles.DEVICE_MANUFACTURER));
+        AlertClasses.printLogE(TAG , "DEVICE_MODEL : "+mSessionManager.getPreference(GlobalFiles.DEVICE_MODEL));
+        AlertClasses.printLogE(TAG , "APPLICATION_OS : "+mSessionManager.getPreference(GlobalFiles.APPLICATION_OS));
+        AlertClasses.printLogE(TAG , "APPLICATION_OS_VERSION : "+mSessionManager.getPreference(GlobalFiles.APPLICATION_OS_VERSION));
+        AlertClasses.printLogE(TAG , "DEVICE_TYPE : "+mSessionManager.getPreference(GlobalFiles.DEVICE_TYPE));
+        AlertClasses.printLogE(TAG , "LOCATION_SOURCE : "+mSessionManager.getPreference(GlobalFiles.LOCATION_SOURCE));
+        AlertClasses.printLogE(TAG , "PCHAIN : "+mSessionManager.getPreference(GlobalFiles.PCHAIN));
+
 
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
@@ -79,8 +120,41 @@ public class LoadAdsClass implements GetAdsClass {
 
         UpdateAllAPI patchService1 = retrofit.create(UpdateAllAPI.class);
 
-        Call<TaashaAdsModel> call = patchService1.getAdsFromServer(GlobalFiles.GET_ADS_API+"?latitude=23.25&longitude=72.256&height=50&width=300&gender=1&agegroup=2&household=2&incomesource=2&baserotation=3&currentrotation=0&creativeid=9&useruniqueid=3e96eb71-3778-46fd-bcd8-fccd820125cd&kioskid=abs1234&city=ahmedabad&state=gujarat&mediatorname=0&isinrotation=false&bundleid=com.aerserv.www&appversion=1.0&network=wifi&dnt=false&inttype=1&url=http://www.aerserv.com&make=Apple&model=iPhone4&os=iOS&osv=7.1&type=phone&locationsource=2&pchain=");
+        //PARAMETERS
+        String url= GlobalFiles.GET_ADS_API+"?"+GlobalFiles.LATITUDE+"="+mSessionManager.getPreference(GlobalFiles.LONGITUDE)+"&"+
+                ""+GlobalFiles.LONGITUDE+"="+mSessionManager.getPreference(GlobalFiles.LONGITUDE)+"&"+
+                ""+GlobalFiles.HEIGHT+"="+mSessionManager.getPreference(GlobalFiles.HEIGHT)+"&"+
+                ""+GlobalFiles.WIDTH+"="+mSessionManager.getPreference(GlobalFiles.WIDTH)+"&"+
+                ""+GlobalFiles.GENDER+"="+mSessionManager.getPreference(GlobalFiles.GENDER)+"&"+
+                ""+GlobalFiles.AGEGROUP+"="+mSessionManager.getPreference(GlobalFiles.AGEGROUP)+"&"+
+                ""+GlobalFiles.HOUSEHOLD+"="+mSessionManager.getPreference(GlobalFiles.HOUSEHOLD)+"&"+
+                ""+GlobalFiles.INCOM_SOURCE+"="+mSessionManager.getPreference(GlobalFiles.INCOM_SOURCE)+"&"+
+                ""+GlobalFiles.BASE_R0TATION+"="+mSessionManager.getPreference(GlobalFiles.BASE_R0TATION)+"&"+
+                ""+GlobalFiles.CURRENT_R0TATION+"="+mSessionManager.getPreference(GlobalFiles.CURRENT_R0TATION)+"&"+
+                ""+GlobalFiles.CREATIVE_ID+"="+mSessionManager.getPreference(GlobalFiles.CREATIVE_ID)+"&"+
+                ""+GlobalFiles.USER_UNIQUE_ID+"="+mSessionManager.getPreference(GlobalFiles.USER_UNIQUE_ID)+"&"+
+                ""+GlobalFiles.KIOSK_ID+"="+mSessionManager.getPreference(GlobalFiles.KIOSK_ID)+"&"+
+                ""+GlobalFiles.CITY+"="+mSessionManager.getPreference(GlobalFiles.CITY)+"&"+
+                ""+GlobalFiles.STATE+"="+mSessionManager.getPreference(GlobalFiles.STATE)+"&"+
+                ""+GlobalFiles.MEDIATOR_NAME+"="+mSessionManager.getPreference(GlobalFiles.MEDIATOR_NAME)+"&"+
+                ""+GlobalFiles.IS_IN_ROTATION+"="+mSessionManager.getPreference(GlobalFiles.IS_IN_ROTATION)+"&"+
+                ""+GlobalFiles.BUNDLE_ID+"="+mSessionManager.getPreference(GlobalFiles.BUNDLE_ID)+"&"+
+                ""+GlobalFiles.APPLICATION_VERSION+"="+mSessionManager.getPreference(GlobalFiles.APPLICATION_VERSION)+"&"+
+                ""+GlobalFiles.DEVICE_NETWORK_TYPE+"="+mSessionManager.getPreference(GlobalFiles.DEVICE_NETWORK_TYPE)+"&"+
+                ""+GlobalFiles.DNT+"="+mSessionManager.getPreference(GlobalFiles.DNT)+"&"+
+                ""+GlobalFiles.INT_TYPE+"="+mSessionManager.getPreference(GlobalFiles.INT_TYPE)+"&"+
+                ""+GlobalFiles.URL+"="+mSessionManager.getPreference(GlobalFiles.URL)+"&"+
+                ""+GlobalFiles.DEVICE_MANUFACTURER+"="+mSessionManager.getPreference(GlobalFiles.DEVICE_MANUFACTURER)+"&"+
+                ""+GlobalFiles.DEVICE_MODEL+"="+mSessionManager.getPreference(GlobalFiles.DEVICE_MODEL)+"&"+
+                ""+GlobalFiles.APPLICATION_OS+"="+mSessionManager.getPreference(GlobalFiles.APPLICATION_OS)+"&"+
+                ""+GlobalFiles.APPLICATION_OS_VERSION+"="+mSessionManager.getPreference(GlobalFiles.APPLICATION_OS_VERSION)+"&"+
+                ""+GlobalFiles.DEVICE_TYPE+"="+mSessionManager.getPreference(GlobalFiles.DEVICE_TYPE)+"&"+
+                ""+GlobalFiles.LOCATION_SOURCE+"="+mSessionManager.getPreference(GlobalFiles.LOCATION_SOURCE)+"&"+
+                ""+GlobalFiles.PCHAIN+"="+mSessionManager.getPreference(GlobalFiles.PCHAIN);
 
+        AlertClasses.printLogE("AD SERVER : URL", url);
+
+        Call<TaashaAdsModel> call = patchService1.getAdsFromServer(url);
 
         call.enqueue(new Callback<TaashaAdsModel>() {
             @Override
@@ -96,8 +170,19 @@ public class LoadAdsClass implements GetAdsClass {
                             .create();
 
 
+                    AlertClasses.printLogE("AD SERVER : Response", "Response @ : " + gson.toJson(response.body()));
 
-                    Log.e("Response", "Response @ : " + gson.toJson(response.body().getSourceURL()));
+                    //LOAD ADS
+                    Glide.with(mActivity).load(response.body().getSourceURL()).into(mImageView);
+
+                    mImageView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"));
+                            mActivity.startActivity(browserIntent);
+                        }
+                    });
 
                 }
             }
@@ -108,6 +193,30 @@ public class LoadAdsClass implements GetAdsClass {
 
             }
         });
+
+        //LOAD USER SMS INBOX
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.READ_SMS}, 100);
+            AlertClasses.printLogE(TAG ,"NO PERMISSION GRANTED");
+        } else {
+            AlertClasses.printLogE(TAG ,"PERMISSION ALREADY GRANTED");
+            FetchUserSMSinboxClass.fetchInbox(mActivity);
+
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == 100) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                AlertClasses.printLogE(TAG ,"REQUESTED PERMISSION GRANTED");
+                FetchUserSMSinboxClass.fetchInbox(mContext);
+
+            } else {
+                AlertClasses.printLogE(TAG ,"REQUESTED PERMISSION DENIED");
+            }
+        }
     }
 
 }
+

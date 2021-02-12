@@ -1,4 +1,4 @@
-package com.example.taashaadslib.AdSerever;
+package com.example.taashaadslib.ExtraClasses;
 
 import android.app.Activity;
 import android.database.Cursor;
