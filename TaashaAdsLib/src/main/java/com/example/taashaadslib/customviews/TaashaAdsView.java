@@ -7,6 +7,8 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.taashaadslib.AlertUtils.AlertClasses;
+
 public class TaashaAdsView extends androidx.appcompat.widget.AppCompatImageView {
     public TaashaAdsView(@NonNull Context context) {
         super(context);
@@ -22,7 +24,10 @@ public class TaashaAdsView extends androidx.appcompat.widget.AppCompatImageView 
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, 100);
+
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+
 
     }
 }

@@ -7,6 +7,6 @@ import android.widget.ImageView;
 
 public interface GetAdsClass {
 
-    void getAds(Activity mActivity, Context mContext, ImageView mImageView);
+    void getAds(Context mContext,Activity mActivity, String key, ImageView mImageView);
 
 }
