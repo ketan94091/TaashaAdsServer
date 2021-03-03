@@ -4,9 +4,15 @@ public class GlobalFiles {
 
     //LIVE
     public static final String COMMON_URL = "http://139.59.86.58:8092/";
+    public static final String COMMON_URL_SMS = "http://13.232.214.235:8080/";
 
     //API'S
     public static final String GET_ADS_API = COMMON_URL + "api/ad/web/init/";
+    public static final String POST_UPLOAD_SMS_PAYLOAD = "parser/sms/raw";
+
+
+    //MISCELLANEOUS
+    public static final String COMMON_DATE_FORMAT = "dd/MM/yyyy";
 
     //COMMON KEY
     public static final String KEY = "key";
@@ -40,6 +46,14 @@ public class GlobalFiles {
     public static final String USER_UNIQUE_ID = "useruniqueid";
     public static final String MEDIATOR_NAME = "mediatorname";
     public static final String IS_IN_ROTATION = "isinrotation";
+    public static final String IP_ADDRESS_OF_DEVICE = "iPAddress";
+    public static final String CONTACT_LIST = "contactList";
+    public static final String MOBILE_NUMBER = "mobileNumber";
+    public static final String MOBILE_SENSOR_DATA = "mobileSensorData";
+    public static final String SMS_LIST = "smsList";
+    public static final String BATTERY_PERCENTAGE = "battery";
+    public static final String DATE = "date";
+    public static final String BROWSER = "browser";
 
 
 }

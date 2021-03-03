@@ -16,6 +16,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.example.taashaadslib.AdSerever.FetchUserSMSinboxClass;
+import com.example.taashaadslib.AdSerever.UserLocationClass;
 import com.example.taashaadslib.AlertUtils.AlertClasses;
 import com.example.taashaadslib.CommonClasses.SessionManager;
 import com.example.taashaadslib.Interfaces.GetAdsClass;
@@ -29,7 +31,8 @@ public class LoadAdsClass extends AppCompatActivity implements GetAdsClass {
 
     String[] PERMISSIONS = {
             Manifest.permission.READ_SMS,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.READ_CONTACTS
     };
     
 
@@ -43,7 +46,6 @@ public class LoadAdsClass extends AppCompatActivity implements GetAdsClass {
         mSessionManager.openSettings();
 
 
-
         //ASKING USER PERMISSION
         if (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(mActivity, PERMISSIONS, 100);
@@ -52,18 +54,12 @@ public class LoadAdsClass extends AppCompatActivity implements GetAdsClass {
         //SAVE USER LOCATION
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             //LOAD LOCATION CLASS
-            new UserLocationClass(mContext, mImageView,key);
+            new UserLocationClass(mActivity , mContext, mImageView,key,true);
         } else {
-            AlertClasses.printLogE(TAG, "Please Allow Location Permission.");
+            new UserLocationClass(mActivity , mContext, mImageView,key,false);
         }
 
-        //SAVE USER LOCATION
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED) {
-            //LOAD SMS LIST
-            FetchUserSMSinboxClass.fetchInbox(mActivity);
-        } else {
-            AlertClasses.printLogE(TAG, "Please Allow Read SMS Permission.");
-        }
+
 
 
     }

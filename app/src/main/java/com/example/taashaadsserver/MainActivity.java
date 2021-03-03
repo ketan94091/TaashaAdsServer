@@ -1,8 +1,10 @@
 package com.example.taashaadsserver;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageView;
 
@@ -26,14 +28,13 @@ public class MainActivity extends AppCompatActivity{
 
         //CREATE INSTANCE
         //LOAD ADS
-        GetAdsClass mGetAdsClass = new LoadAdsClass();
+        GetAdsClass mGetAdsClass =new LoadAdsClass();
         mGetAdsClass.getAds(getApplicationContext(),MainActivity.this,"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJlYXN5cGF5IiwiY3JlYXRlZCI6MTQ5Nzg2NzIwNDU3MSwiZXhwIjo2MTk3Nzg2NzIwNH0.bQS77TdFV4gH05y2L6b7f6hxQ6cJxs3R7Jmg6W7NefFhiCiv_YBqFjSUlts32ukxRFLYvylEWDGMcYrz2lR_pA",imgLocalImage);
 
 
     }
 
-
-  /*  @Override
+    /*  @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
