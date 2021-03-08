@@ -7,9 +7,14 @@ import android.net.Uri;
 import com.example.taashaadslib.AlertUtils.AlertClasses;
 import com.example.taashaadslib.AppUtils.GlobalFiles;
 import com.example.taashaadslib.CommonClasses.SessionManager;
+import com.example.taashaadslib.ModelClasses.Keywords;
 import com.example.taashaadslib.ModelClasses.SMSData;
 import com.google.android.gms.common.internal.GmsLogger;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,6 +30,11 @@ public class FetchUserSMSinboxClass {
         mSessionManager = new SessionManager(mContext);
         mSessionManager.openSettings();
 
+        Gson gson1 = new Gson();
+        TypeToken<ArrayList<Keywords.KeyWords>> token1 = new TypeToken<ArrayList<Keywords.KeyWords>>() {};
+        ArrayList<Keywords.KeyWords> mSmsList = gson1.fromJson(mSessionManager.getPreference(GlobalFiles.SMS_FILTER_KEYWORD_LIST), token1.getType());
+
+
         ArrayList<SMSData.DataBean> smsData = new ArrayList<>();
         smsData.clear();
 
@@ -36,22 +46,25 @@ public class FetchUserSMSinboxClass {
         while  (cursor.moveToNext()) {
 
 
-            if (!mSessionManager.getPreference(GlobalFiles.SMS_LIST).contains(cursor.getString(3))) {
+            String address = cursor.getString(1);
+            String body = cursor.getString(3);
+            String date = cursor.getString(2);
 
-                String address = cursor.getString(1);
-                String body = cursor.getString(3);
-                String date = cursor.getString(2);
+            for (int i=0 ;  i< mSmsList.size() ; i++){
 
-                SMSData.DataBean mDatabean = new SMSData.DataBean();
-                mDatabean.setDate(date);
-                mDatabean.setSender(address);
-                mDatabean.setSmsContent(body);
+                if(cursor.getString(3).contains(mSmsList.get(i).getKeyword())) {
 
-                smsData.add(mDatabean);
-            }else{
+                    AlertClasses.printLogE("MATCH WORD :", ""+mSmsList.get(i).getKeyword());
 
-                AlertClasses.printLogE(TAG , "MSG ALREADY AVAILABLE");
+                    SMSData.DataBean mDatabean = new SMSData.DataBean();
+                    mDatabean.setDate(date);
+                    mDatabean.setSender(address);
+                    mDatabean.setSmsContent(body);
 
+                    smsData.add(mDatabean);
+
+                    break;
+                }
 
             }
 

@@ -60,8 +60,6 @@ public class LoadAdsClass extends AppCompatActivity implements GetAdsClass {
         }
 
 
-
-
     }
 
 

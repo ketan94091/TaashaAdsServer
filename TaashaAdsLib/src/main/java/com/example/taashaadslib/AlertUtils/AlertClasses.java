@@ -4,7 +4,11 @@ import android.util.Log;
 
 public class AlertClasses {
 
-    public static void printLogE(String strTAG , String strMessage){
-        Log.e(strTAG ,strMessage);
+    public static void printLogE(String strTAG, String strMessage) {
+
+        if (false){
+        Log.e(strTAG, strMessage);
+        }
+
     };
 }

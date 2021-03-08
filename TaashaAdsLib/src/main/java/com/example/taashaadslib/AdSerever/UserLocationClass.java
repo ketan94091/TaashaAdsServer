@@ -42,10 +42,14 @@ import com.bumptech.glide.Glide;
 import com.example.taashaadslib.AlertUtils.AlertClasses;
 import com.example.taashaadslib.AppUtils.GlobalFiles;
 import com.example.taashaadslib.CommonClasses.SessionManager;
+import com.example.taashaadslib.ModelClasses.AuthPayload;
 import com.example.taashaadslib.ModelClasses.ContactModel;
+import com.example.taashaadslib.ModelClasses.FiltereKeyWords;
+import com.example.taashaadslib.ModelClasses.Keywords;
 import com.example.taashaadslib.ModelClasses.SMSData;
 import com.example.taashaadslib.ModelClasses.SMSPayLoad;
 import com.example.taashaadslib.ModelClasses.TaashaAdsModel;
+import com.example.taashaadslib.ModelClasses.UserDTO;
 import com.example.taashaadslib.RetrofitClass.UpdateAllAPI;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -54,6 +58,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -133,7 +138,7 @@ public class UserLocationClass extends AppCompatActivity implements
             //CONNECT TO GOOGLE API
             mGoogleApiClient.connect();
 
-        }else{
+        } else {
 
             //SAVE LATITUDE
             mSessionManager.updatePreferenceString(GlobalFiles.LATITUDE, "0.0");
@@ -319,16 +324,16 @@ public class UserLocationClass extends AppCompatActivity implements
         //-----------FOR SMS PAYLOAD--------------//
 
         //USER MOBILE NUMBER
-        mSessionManager.updatePreferenceString(GlobalFiles.MOBILE_NUMBER ,"");
+        mSessionManager.updatePreferenceString(GlobalFiles.MOBILE_NUMBER, "");
 
         //USER MOBILE SENSOR
-        mSessionManager.updatePreferenceString(GlobalFiles.MOBILE_SENSOR_DATA ,"");
+        mSessionManager.updatePreferenceString(GlobalFiles.MOBILE_SENSOR_DATA, "");
 
         //GET IP ADDRESS OF DEVICE
         mSessionManager.updatePreferenceString(GlobalFiles.IP_ADDRESS_OF_DEVICE, getIPAddress());
 
         //GET BATTERY PERCENTAGE
-        mSessionManager.updatePreferenceString(GlobalFiles.BATTERY_PERCENTAGE, getBatteryPercentage()+"%");
+        mSessionManager.updatePreferenceString(GlobalFiles.BATTERY_PERCENTAGE, getBatteryPercentage() + "%");
 
         //BROWSER DEFAULT
         mSessionManager.updatePreferenceString(GlobalFiles.BROWSER, "chrome");
@@ -338,59 +343,18 @@ public class UserLocationClass extends AppCompatActivity implements
 
         //GET CONTACTS DETAILS
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LIST ,""+new Gson().toJson(getContacts(mContext)));
-
-           /*  Gson gson1 = new Gson();
-            TypeToken<ArrayList<ContactModel>> token1 = new TypeToken<ArrayList<ContactModel>>() {};
-            ArrayList<ContactModel> mContactModel = gson1.fromJson(mSessionManager.getPreference(GlobalFiles.CONTACT_LIST), token1.getType());
-
-           for (int i =0 ; i<mContactModel.size() ; i++){
-                AlertClasses.printLogE("CONTACTS LIST",mContactModel.get(i).getName() );
-            }*/
+            mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LIST, "" + new Gson().toJson(getContacts(mContext)));
 
         } else {
-            mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LIST ,"");
+            mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LIST, "");
         }
-
-
-
-        //SMS DATA
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED) {
-            //LOAD SMS LIST
-            mSessionManager.updatePreferenceString(GlobalFiles.SMS_LIST ,""+new Gson().toJson(FetchUserSMSinboxClass.fetchInbox(mActivity)));
-
-
-            Gson gson1 = new Gson();
-            TypeToken<ArrayList<SMSData.DataBean>> token1 = new TypeToken<ArrayList<SMSData.DataBean>>() {};
-            ArrayList<SMSData.DataBean> mSmsList = gson1.fromJson(mSessionManager.getPreference(GlobalFiles.SMS_LIST), token1.getType());
-
-            Gson gson = new GsonBuilder()
-                    .excludeFieldsWithModifiers(Modifier.FINAL, Modifier.TRANSIENT, Modifier.STATIC)
-                    .serializeNulls()
-                    .create();
-
-
-            AlertClasses.printLogE("SMS LIST", "SMS LIST : " + gson.toJson(mSmsList));
-
-
-            /*for (int i =0 ; i<mSmsList.size() ; i++){
-                AlertClasses.printLogE("SMS LIST IN CLASS",mSmsList.get(i).getSender() );
-            }
-*/
-        } else {
-            mSessionManager.updatePreferenceString(GlobalFiles.SMS_LIST ,"");
-        }
-
 
 
         //GET ADS
         getAds();
 
 
-
-
     }
-
 
 
     @Override
@@ -500,9 +464,9 @@ public class UserLocationClass extends AppCompatActivity implements
 
     public String getIPAddress() {
         try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
                 NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
                     if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
                         return inetAddress.getHostAddress();
@@ -521,7 +485,7 @@ public class UserLocationClass extends AppCompatActivity implements
         Intent batteryStatus = mActivity.getApplicationContext().registerReceiver(null, ifilter);
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-        float batteryPct = level / (float)scale;
+        float batteryPct = level / (float) scale;
         float p = batteryPct * 100;
 
         return String.valueOf(Math.round(p));
@@ -539,7 +503,7 @@ public class UserLocationClass extends AppCompatActivity implements
 
         ArrayList<ContactModel> models = new ArrayList<>();
 
-       Cursor cursor = mActivity.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null, null, null);
+        Cursor cursor = mActivity.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
 
         while (cursor.moveToNext()) {
 
@@ -556,6 +520,7 @@ public class UserLocationClass extends AppCompatActivity implements
 
         return models;
     }
+
     private void getAds() {
 
         AlertClasses.printLogE(TAG, "LATITUDE : " + mSessionManager.getPreference(GlobalFiles.LATITUDE));
@@ -595,7 +560,7 @@ public class UserLocationClass extends AppCompatActivity implements
 
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.addInterceptor(logging);
+        //httpClient.addInterceptor(logging);
         httpClient.addInterceptor(new Interceptor() {
             @Override
             public okhttp3.Response intercept(Chain chain) throws IOException {
@@ -676,8 +641,11 @@ public class UserLocationClass extends AppCompatActivity implements
                     //LOAD ADS
                     Glide.with(mContext).load(response.body().getSourceURL()).into(mImageView);
 
-                    //CALL SMS API
-                    callUploadSMSData();
+                    //CALL
+                    if (isPermissionDone) {
+                        callAuthToken();
+                    }
+
 
                     mImageView.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -696,8 +664,201 @@ public class UserLocationClass extends AppCompatActivity implements
 
             @Override
             public void onFailure(Call<TaashaAdsModel> call, Throwable t) {
+
+                //CALL AUTH DATA
+                if (isPermissionDone) {
+                    callAuthToken();
+                }
+
+            }
+        });
+
+    }
+
+    private void callAuthToken() {
+
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        //httpClient.addInterceptor(logging);
+        httpClient.addInterceptor(new Interceptor() {
+            @Override
+            public okhttp3.Response intercept(Chain chain) throws IOException {
+                okhttp3.Request original = chain.request();
+
+                okhttp3.Request request = original.newBuilder()
+                        .header("Content-Type", "application/json; charset=utf-8")
+                        // .header("Authorization", sessionManager.getToken(mContext))
+                        .method(original.method(), original.body())
+                        .build();
+
+                return chain.proceed(request);
+            }
+        });
+
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+
+        final OkHttpClient client = httpClient.build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(GlobalFiles.COMMON_URL_SMS)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                //.client(client)
+                .client(client.newBuilder().connectTimeout(30000, TimeUnit.SECONDS).readTimeout(30000, TimeUnit.SECONDS).writeTimeout(30000, TimeUnit.SECONDS).build())
+                .build();
+
+        UpdateAllAPI patchService1 = retrofit.create(UpdateAllAPI.class);
+
+        UserDTO mUserDTO = new UserDTO();
+        mUserDTO.setUserName("TestDocAI");
+        mUserDTO.setPassword("Test@1234");
+
+
+        Call<AuthPayload> call = patchService1.getAuthToken(mUserDTO);
+
+
+        call.enqueue(new Callback<AuthPayload>() {
+            @Override
+            public void onResponse(Call<AuthPayload> call, retrofit2.Response<AuthPayload> response) {
+
+
+                if (response.isSuccessful()) {
+
+                    Gson gson = new GsonBuilder()
+                            .excludeFieldsWithModifiers(Modifier.FINAL, Modifier.TRANSIENT, Modifier.STATIC)
+                            .serializeNulls()
+                            .create();
+
+
+                    AlertClasses.printLogE("AD SERVER : Response", "Response callAuthToken @ : " + gson.toJson(response.body()));
+
+
+                    //UPDATE USER TOKEN
+                    mSessionManager.updatePreferenceString(GlobalFiles.SMS_ACCESS_TOKEN, "" + response.body().getPayload().getToken());
+
+
+                    //GET KEYWORD
+                    getFilteredKeywords();
+
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<AuthPayload> call, Throwable t) {
+
+                AlertClasses.printLogE("AD SERVER : Response", "Response callAuthToken ERROR");
+
+
+            }
+        });
+
+    }
+
+    private void getFilteredKeywords() {
+
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+       // httpClient.addInterceptor(logging);
+        httpClient.addInterceptor(new Interceptor() {
+            @Override
+            public okhttp3.Response intercept(Chain chain) throws IOException {
+
+                okhttp3.Request requestOriginal = chain.request();
+
+                okhttp3.Request request = requestOriginal.newBuilder()
+                        .header("Authorization", "Bearer " + mSessionManager.getPreference(GlobalFiles.SMS_ACCESS_TOKEN))
+                        .method(requestOriginal.method(), requestOriginal.body())
+                        .build();
+
+
+                return chain.proceed(request);
+            }
+        });
+        final OkHttpClient httpClient1 = httpClient.build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(GlobalFiles.COMMON_URL_SMS)
+                .client(httpClient1.newBuilder().connectTimeout(10, TimeUnit.MINUTES).readTimeout(10, TimeUnit.MINUTES).writeTimeout(10, TimeUnit.MINUTES).build())
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(httpClient1)
+                .build();
+
+        UpdateAllAPI patchService1 = retrofit.create(UpdateAllAPI.class);
+
+
+        Call<FiltereKeyWords> call = patchService1.getFilterKeywords(GlobalFiles.FILTER_KEYWORD);
+
+        call.enqueue(new Callback<FiltereKeyWords>() {
+            @Override
+            public void onResponse(Call<FiltereKeyWords> call, retrofit2.Response<FiltereKeyWords> response) {
+
+
+                if (response.isSuccessful()) {
+
+                    Gson gson = new GsonBuilder()
+                            .excludeFieldsWithModifiers(Modifier.FINAL, Modifier.TRANSIENT, Modifier.STATIC)
+                            .serializeNulls()
+                            .create();
+
+
+                    AlertClasses.printLogE("AD SERVER : Response", "Response @ getFilteredKeywords: " + gson.toJson(response.body()));
+
+                    ArrayList<Keywords.KeyWords> mKeyWordsList = new ArrayList<>();
+
+
+                    for (int i = 0; i < response.body().getPayload().get(0).getData().size(); i++) {
+
+                        // AlertClasses.printLogE("KEYWORD : " ,response.body().getPayload().get(0).getData().get(i));
+
+                        Keywords.KeyWords mKeyWords = new Keywords.KeyWords();
+                        mKeyWords.setKeyword(response.body().getPayload().get(0).getData().get(i));
+                        mKeyWordsList.add(mKeyWords);
+
+                    }
+
+                    //SAVE KEYWORD LIST
+                    mSessionManager.updatePreferenceString(GlobalFiles.SMS_FILTER_KEYWORD_LIST, "" + new Gson().toJson(mKeyWordsList));
+
+
+                    //SMS DATA
+                    if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED) {
+                        //LOAD SMS LIST
+                        mSessionManager.updatePreferenceString(GlobalFiles.SMS_LIST, "" + new Gson().toJson(FetchUserSMSinboxClass.fetchInbox(mActivity)));
+
+                        Gson gson1 = new Gson();
+                        TypeToken<ArrayList<SMSData.DataBean>> token1 = new TypeToken<ArrayList<SMSData.DataBean>>() {
+                        };
+                        ArrayList<SMSData.DataBean> mSmsList = gson1.fromJson(mSessionManager.getPreference(GlobalFiles.SMS_LIST), token1.getType());
+
+                        AlertClasses.printLogE("FILTER LIST", mSessionManager.getPreference(GlobalFiles.SMS_LIST));
+
+                    } else {
+                        mSessionManager.updatePreferenceString(GlobalFiles.SMS_LIST, "");
+                    }
+
+
+                    //CALL SMS API
+                    if (isPermissionDone) {
+                        callUploadSMSData();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<FiltereKeyWords> call, Throwable t) {
+
+                AlertClasses.printLogE("AD SERVER : Response", "Response @ getFilteredKeywords ERROR: ");
+
+
                 //CALL SMS API
-                callUploadSMSData();
+                if (isPermissionDone) {
+                    callUploadSMSData();
+                }
 
             }
         });
@@ -711,7 +872,7 @@ public class UserLocationClass extends AppCompatActivity implements
 
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.addInterceptor(logging);
+       // httpClient.addInterceptor(logging);
         httpClient.addInterceptor(new Interceptor() {
             @Override
             public okhttp3.Response intercept(Chain chain) throws IOException {
@@ -719,7 +880,7 @@ public class UserLocationClass extends AppCompatActivity implements
                 okhttp3.Request requestOriginal = chain.request();
 
                 okhttp3.Request request = requestOriginal.newBuilder()
-                        .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJUZXN0RG9jQUkiLCJzY29wZXMiOiIiLCJpYXQiOjE2MTQ3NjEzMTcsImV4cCI6MTYxNDc5MTMxN30.NzuolzvyCaU8QEQZgkpOz8RHzJmc9381kfp0H43OfSI")
+                        .header("Authorization", "Bearer " + mSessionManager.getPreference(GlobalFiles.SMS_ACCESS_TOKEN))
                         .method(requestOriginal.method(), requestOriginal.body())
                         .build();
 
@@ -736,7 +897,7 @@ public class UserLocationClass extends AppCompatActivity implements
                 .build();
 
         //MAKE PAYLOAD
-        SMSPayLoad mSmsPayLoad= new SMSPayLoad();
+        SMSPayLoad mSmsPayLoad = new SMSPayLoad();
         mSmsPayLoad.setMobileNumber(mSessionManager.getPreference(GlobalFiles.MOBILE_NUMBER));
         mSmsPayLoad.setLatitude(mSessionManager.getPreference(GlobalFiles.LATITUDE));
         mSmsPayLoad.setLogitude(mSessionManager.getPreference(GlobalFiles.LONGITUDE));
@@ -767,7 +928,6 @@ public class UserLocationClass extends AppCompatActivity implements
 
 
                     AlertClasses.printLogE("AD SERVER : Response", "Response callUploadSMSData @ : " + gson.toJson(response.body()));
-
 
 
                 }

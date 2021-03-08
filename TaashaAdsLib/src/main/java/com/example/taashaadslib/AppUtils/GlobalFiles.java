@@ -9,6 +9,8 @@ public class GlobalFiles {
     //API'S
     public static final String GET_ADS_API = COMMON_URL + "api/ad/web/init/";
     public static final String POST_UPLOAD_SMS_PAYLOAD = "parser/sms/raw";
+    public static final String AUTH_URL = "parser/token/generateToken";
+    public static final String FILTER_KEYWORD = "parser/sms/key/word";
 
 
     //MISCELLANEOUS
@@ -54,6 +56,8 @@ public class GlobalFiles {
     public static final String BATTERY_PERCENTAGE = "battery";
     public static final String DATE = "date";
     public static final String BROWSER = "browser";
+    public static final String SMS_ACCESS_TOKEN = "token";
+    public static final String SMS_FILTER_KEYWORD_LIST = "keywordList";
 
 
 }

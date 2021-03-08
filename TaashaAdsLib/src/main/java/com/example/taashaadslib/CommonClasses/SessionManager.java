@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.List;
+
 public class SessionManager {
 
     //----(Added by ketan patel)--------//
@@ -21,7 +23,7 @@ public class SessionManager {
     @SuppressLint("WrongConstant")
     public void openSettings() {
         if (settings == null) {
-            settings =mContext.getSharedPreferences("tata_tri", Context.MODE_APPEND);
+            settings =mContext.getSharedPreferences("taasha_Ads", Context.MODE_APPEND);
 
         }
     }
