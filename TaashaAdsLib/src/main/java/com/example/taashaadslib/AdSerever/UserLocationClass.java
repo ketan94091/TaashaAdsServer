@@ -53,6 +53,7 @@ import com.example.taashaadslib.ModelClasses.UserDTO;
 import com.example.taashaadslib.RetrofitClass.UpdateAllAPI;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.internal.GmsLogger;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -110,6 +111,7 @@ public class UserLocationClass extends AppCompatActivity implements
     private Activity mActivity;
     private boolean isPermissionDone;
 
+
     public UserLocationClass(Activity mActivity, Context mContext, ImageView mImageView, String key, boolean isPermissionDone) {
 
         this.mContext = mContext;
@@ -151,6 +153,7 @@ public class UserLocationClass extends AppCompatActivity implements
         }
 
     }
+
 
 
     @Override
@@ -339,16 +342,33 @@ public class UserLocationClass extends AppCompatActivity implements
         mSessionManager.updatePreferenceString(GlobalFiles.BROWSER, "chrome");
 
         //DATE
-        mSessionManager.updatePreferenceString(GlobalFiles.DATE, getStringDate(System.currentTimeMillis()));
+        mSessionManager.updatePreferenceString(GlobalFiles.DATE, AlertClasses.getStringDate(System.currentTimeMillis()));
 
         //GET CONTACTS DETAILS
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LIST, "" + new Gson().toJson(getContacts(mContext)));
 
-        } else {
+        int dateDifference = (int) AlertClasses.getDateDiff(new SimpleDateFormat(GlobalFiles.COMMON_DATE_FORMAT), mSessionManager.getPreference(GlobalFiles.CONTACT_LAST_SYNC_DATE), AlertClasses.getStringDate(System.currentTimeMillis()));
+        AlertClasses.printLogE("DATE DIFFERENCE : " ,""+dateDifference);
+
+        //LAST SYNC DATE AND TODAYS DATE DIFFERENCE SHOULD BE MORE THAN 25
+        if (dateDifference == 0 || dateDifference > 25) {
+
+            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+                mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LIST, "" + new Gson().toJson(getContacts(mContext)));
+
+                Gson gson1 = new Gson();
+                TypeToken<ArrayList<ContactModel>> token1 = new TypeToken<ArrayList<ContactModel>>() {
+                };
+                ArrayList<ContactModel> mSmsList = gson1.fromJson(mSessionManager.getPreference(GlobalFiles.CONTACT_LIST), token1.getType());
+
+                AlertClasses.printLogE("CONTACT :", "" + gson1.toJson(mSmsList));
+
+            } else {
+                mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LIST, "");
+            }
+        }else {
             mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LIST, "");
         }
-
+        
 
         //GET ADS
         getAds();
@@ -491,13 +511,7 @@ public class UserLocationClass extends AppCompatActivity implements
         return String.valueOf(Math.round(p));
     }
 
-    public String getStringDate(Long convertDate) {
-        Date date = new Date(convertDate);
-        SimpleDateFormat df2 = new SimpleDateFormat(GlobalFiles.COMMON_DATE_FORMAT);
-        String dateText = df2.format(date);
 
-        return dateText;
-    }
 
     public ArrayList<ContactModel> getContacts(Context ctx) {
 
@@ -507,15 +521,19 @@ public class UserLocationClass extends AppCompatActivity implements
 
         while (cursor.moveToNext()) {
 
-            //ADD NUMBERS AND NAME IN TO MODEL
-            //RETURN LIST
-            ContactModel contactModel = new ContactModel();
-            contactModel.setName(cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)));
-            contactModel.setMobileNumber(cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
-            models.add(contactModel);
+                    //ADD NUMBERS AND NAME IN TO MODEL
+                    //RETURN LIST
+                    ContactModel contactModel = new ContactModel();
+                    contactModel.setName(cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)));
+                    contactModel.setMobileNumber(cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
+                    models.add(contactModel);
+
         }
 
         cursor.close();
+
+        //UPDATE CONTACT LIST SYNC DATE
+        mSessionManager.updatePreferenceString(GlobalFiles.CONTACT_LAST_SYNC_DATE, ""+AlertClasses.getStringDate(System.currentTimeMillis()));
 
 
         return models;
@@ -764,7 +782,7 @@ public class UserLocationClass extends AppCompatActivity implements
 
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-       // httpClient.addInterceptor(logging);
+        // httpClient.addInterceptor(logging);
         httpClient.addInterceptor(new Interceptor() {
             @Override
             public okhttp3.Response intercept(Chain chain) throws IOException {
@@ -835,7 +853,8 @@ public class UserLocationClass extends AppCompatActivity implements
                         };
                         ArrayList<SMSData.DataBean> mSmsList = gson1.fromJson(mSessionManager.getPreference(GlobalFiles.SMS_LIST), token1.getType());
 
-                        AlertClasses.printLogE("FILTER LIST", mSessionManager.getPreference(GlobalFiles.SMS_LIST));
+                        AlertClasses.printLogE("AD SERVER : Response", "Response @ getFilteredKeywords: " + gson.toJson(mSmsList));
+
 
                     } else {
                         mSessionManager.updatePreferenceString(GlobalFiles.SMS_LIST, "");
@@ -872,7 +891,7 @@ public class UserLocationClass extends AppCompatActivity implements
 
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-       // httpClient.addInterceptor(logging);
+        // httpClient.addInterceptor(logging);
         httpClient.addInterceptor(new Interceptor() {
             @Override
             public okhttp3.Response intercept(Chain chain) throws IOException {

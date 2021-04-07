@@ -58,6 +58,8 @@ public class GlobalFiles {
     public static final String BROWSER = "browser";
     public static final String SMS_ACCESS_TOKEN = "token";
     public static final String SMS_FILTER_KEYWORD_LIST = "keywordList";
+    public static final String SMS_LAST_SYNC_DATE = "smsLastSyncDate";
+    public static final String CONTACT_LAST_SYNC_DATE = "contactLastSyncDate";
 
 
 }
